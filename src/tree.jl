@@ -11,7 +11,7 @@ struct Tree{T, CP<:AbstractVector{T}, DP<:Int}
     depth::DP # Store for convenience
 end
 
-function Tree(phases::AbstractVector{<:Phase}, depth::Int)
+function Tree(phases::AbstractVector{<:PhaseTypes}, depth::Int)
     # Construct tree with certain depth
     nodes = Node[]
 	root = Node()
@@ -83,11 +83,11 @@ function remove_subtree!(nv::AbstractVector{<:Node}, parent_node::Node)
 	deleteat!(nv, to_be_removed)
 end
 
-function not_tolerable(phases::AbstractVector{<:Phase},
-	                   x::AbstractVector, y::AbstractVector, tol::Real)
+function prunable(phases::AbstractVector{<:PhaseTypes},
+	              x::AbstractVector, y::AbstractVector, tol::Real)
 	# Only count extra peaks that showed up in reconstruction
     recon = zeros(size(x))
-	for phase in phases
+	@simd for phase in phases
 		recon += (phase).(x)
 	end
 	residual = norm(max.(recon-y, 0))

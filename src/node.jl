@@ -1,12 +1,15 @@
 # Do breadth-first-search
 # Recursive?
+
+PhaseTypes = Union{Phase, CrystalPhase}
+
 struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector}
 	current_phases::CP
 	child_node::CN
 end
 
-Node() = Node(Phase[], Node[]) # Root
-Node(phases::AbstractVector{<:Phase}) = Node(phases, Node[])
+Node{T}(T::Type) where {T<:PhaseTypes} = Node(T[], Node[]) # Root
+Node(phases::AbstractVector{<:PhaseTypes}) = Node(phases, Node[])
 
 function Base.:(==)(a::Node, b::Node)
     return [p.id for p in a.current_phases] == [p.id for p in b.current_phases]
