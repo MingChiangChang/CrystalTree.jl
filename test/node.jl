@@ -1,13 +1,27 @@
-using PhaseMapping: readsticks, Phase, Node, 
+using PhaseMapping: readsticks
+using CrystalShift: CrystalPhase
+using Test
+
 include("../src/node.jl")
 include("../src/tree.jl")
 
-stickpatterns = readsticks("test/sticks.txt")
-phases = Phase.(stickpatterns)
+# CrystalPhas object creation
+path = "data/"
+phase_path = path * "sticks.csv"
+f = open(phase_path, "r")
+s = split(read(f, String), "#\n") # Windows: #\r\n ...
 
-root = Node()
-node1 = Node([phases[1]], [])
-node2 = Node([phases[1] ,phases[2]], [])
+if s[end] == ""
+    pop!(s)
+end
+
+cs = Vector{CrystalPhase}(undef, size(s))
+@. cs = CrystalPhase(String(s))
+println("$(size(cs)) phase objects created!")
+
+root = Node{CrystalPhase}()
+node1 = Node(cs[1])
+node2 = Node([cs[1] ,cs[2]])
 
 add_child!(root, node1)
 add_child!(node1, node2)

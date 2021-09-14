@@ -1,6 +1,7 @@
 # Do breadth-first-search
 # Recursive?
-
+using CrystalShift: CrystalPhase
+using PhaseMapping: Phase
 PhaseTypes = Union{Phase, CrystalPhase}
 
 struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector}
@@ -8,8 +9,11 @@ struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector}
 	child_node::CN
 end
 
-Node{T}(T::Type) where {T<:PhaseTypes} = Node(T[], Node[]) # Root
-Node(phases::AbstractVector{<:PhaseTypes}) = Node(phases, Node[])
+Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[]) # Root
+Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[])
+Node(phase::Phase) = Node([phase], Node{<:Phase}[])
+Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[])
+Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[])
 
 function Base.:(==)(a::Node, b::Node)
     return [p.id for p in a.current_phases] == [p.id for p in b.current_phases]
@@ -51,7 +55,6 @@ end
 
 get_level(node::Node) = size(node.current_phases)[1]
 get_phase_ids(node::Node) = [p.id for p in node.current_phases]
-
 
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
     return [n for n in nodes if get_level(n)==level]
