@@ -5,6 +5,7 @@
 #    Or is there anything better than 2 norm
 using Combinatorics
 using LinearAlgebra
+using Base.Threads
 
 struct Tree{T, CP<:AbstractVector{T}, DP<:Int}
     nodes::CP
@@ -70,6 +71,18 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 		end
     end
 end
+
+function search!(t::Tree, traversal_func::Function, x::AbstractVector,
+	          y::AbstractVector, std_noise::Real, mean::AbstractVector,
+			  std::AbstractVector, maxiter=32, regularization::Bool=true,
+			  tol::Real=1e-3)
+    node_order = traversal_func(t)
+	@threads for node in node_order
+        optimize!(node.current_phases, x, y, std_noise, mean, std,
+                  maxiter=maxiter, regularization=regularization)
+    end
+end
+
 # subtree
 function remove_subtree!(nv::AbstractVector{<:Node}, parent_node::Node)
     # Given a vector of node and a node, remove

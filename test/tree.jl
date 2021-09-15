@@ -4,14 +4,16 @@ using Test
 
 #include("../../Crystallography_based_shifting/src/CrystalShift.jl")
 
-using PhaseMapping: readsticks, Lorentz
-using PhaseMapping: pmp_path!
-using PhaseMapping: readsticks, Phase, StickPattern, optimize!
-using CrystalShift: CrystalPhase
+using PhaseMapping: Lorentz
+using CrystalShift: CrystalPhase, optimize!
 
 
 include("../src/node.jl")
 include("../src/tree.jl")
+
+std_noise = .01
+mean_θ = [1., 1., 2.]
+std_θ = [1., 1., 1.]
 
 # CrystalPhas object creation
 path = "data/"
@@ -32,7 +34,7 @@ y = cs[1].(x)+cs[2].(x)
 
 # Tests: Tree construction, BFT, removing multiple child
 
-a = Tree(cs, 3)
+a = Tree(cs, 2)
 println("done")
 # @test size(a.nodes)[1]==26
 # traversal = bft(a)
@@ -42,8 +44,8 @@ println("done")
 #     @test all(n->get_level(n) == 3, traversal[16:25])
 # end
 
-# search!(a, bft, x, y, std_noise, mean_θ, std_θ, 32, true, not_tolerable, 1)
+search!(a, bft, x, y, std_noise, mean_θ, std_θ, 32, true, 1)
 
-# println(get_phase_ids(a.nodes[7]))
-# plot(x, a.nodes[7].current_phases[1].(x)+a.nodes[7].current_phases[2].(x), label="Reconstructed")
-# plot!(x, y, label="Answer")
+println(get_phase_ids(a.nodes[17]))
+plot(x, a.nodes[17].current_phases[1].(x)+a.nodes[17].current_phases[2].(x), label="Reconstructed")
+plot!(x, y, label="Answer")
