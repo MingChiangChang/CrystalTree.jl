@@ -13,8 +13,9 @@ end
 
 function Tree(phases::AbstractVector{<:PhaseTypes}, depth::Int)
     # Construct tree with certain depth
-    nodes = Node[]
-	root = Node()
+	T = eltype(phases)
+    nodes = Node{<:T}[]
+	root = Node{T}()
 	push!(nodes, root)
     for d in 1:depth
 		phase_combs = combinations(phases, d)
@@ -34,6 +35,7 @@ function Tree(phases::AbstractVector{<:PhaseTypes}, depth::Int)
 end
 
 Base.size(t::Tree) = size(t.nodes)
+Base.getindex(t::Tree, i::Int) = Base.getindex(t.nodes, i)
 
 function bft(t::Tree)
     # Breadth-first traversal, return an array of
