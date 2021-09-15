@@ -15,6 +15,14 @@ Node(phase::Phase) = Node([phase], Node{<:Phase}[])
 Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[])
 Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[])
 
+function Base.show(io::IO, node::Node)
+    println("Phases:")
+	for phase in node.current_phases
+		println("    $(phase.name)")
+	end
+	println("Number of child nodes: $(size(node.child_node))")
+end
+
 function Base.:(==)(a::Node, b::Node)
     return [p.id for p in a.current_phases] == [p.id for p in b.current_phases]
 end
