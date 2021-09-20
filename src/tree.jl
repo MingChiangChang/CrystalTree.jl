@@ -52,6 +52,18 @@ function bft(t::Tree)
 	traversal
 end
 
+function bft(t::Tree, level::Int)
+    # Breadth-first traversal, return an array of
+	# Node with the b-f order
+	traversal = Node[]
+	for node in t.nodes
+        if get_level(node) == level
+	    	push!(traversal, node)
+		end
+	end
+	traversal
+end
+
 function dft(t::Tree)
     # Depth-first traversal, return an array of Node with
 	# the D-F order
@@ -61,15 +73,16 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 	          y::AbstractVector, std_noise::Real, mean::AbstractVector,
 			  std::AbstractVector, maxiter=32, regularization::Bool=true,
 			  prunable::Function=(p, x, y, t)->false, tol::Real=1e-3)
-    node_order = traversal_func(t)
-	while !isempty(node_order)
-	    node = popfirst!(node_order)
-        phases = optimize!(node.current_phases, x, y, std_noise, mean, std,
-		                maxiter=maxiter, regularization=regularization)
-		if prunable(phases, x, y, tol)
-            remove_subtree!(node_order, node)
+	node_order = traversal_func(t)
+	for level in 1:t.depth
+        nodes = traversal_func(t, level)
+		@thread for node in nodes
+		    phases = optimize!(node.current_phases, x, y, std_noise,
+			          mean, std, maxiter, regularization)
+			if prunable(phases, x, y, tol)
+				remove_subtree!(node_order, node)
 		end
-    end
+	end
 end
 
 function search!(t::Tree, traversal_func::Function, x::AbstractVector,
@@ -98,7 +111,7 @@ function remove_subtree!(nv::AbstractVector{<:Node}, parent_node::Node)
 	deleteat!(nv, to_be_removed)
 end
 
-function prunable(phases::AbstractVector{<:PhaseTypes},
+function pos_res_thresholding(phases::AbstractVector{<:PhaseTypes},
 	              x::AbstractVector, y::AbstractVector, tol::Real)
 	# Only count extra peaks that showed up in reconstruction
     recon = zeros(size(x))
