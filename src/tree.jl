@@ -52,17 +52,7 @@ function bft(t::Tree)
 	traversal
 end
 
-function bft(t::Tree, level::Int)
-    # Breadth-first traversal, return an array of
-	# Node with the b-f order
-	traversal = Node[]
-	for node in t.nodes
-        if get_level(node) == level
-	    	push!(traversal, node)
-		end
-	end
-	traversal
-end
+bft(t::Tree, level::Int) = get_nodes_at_level(t.nodes, level)
 
 function dft(t::Tree)
     # Depth-first traversal, return an array of Node with
@@ -75,12 +65,15 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 			  prunable::Function=(p, x, y, t)->false, tol::Real=1e-3)
 	node_order = traversal_func(t)
 	for level in 1:t.depth
-        nodes = traversal_func(t, level)
-		@thread for node in nodes
+        nodes = get_nodes_at_level(node_order, level)
+		@threads for node in nodes
 		    phases = optimize!(node.current_phases, x, y, std_noise,
-			          mean, std, maxiter, regularization)
+			          mean, std, maxiter=maxiter, regularization=regularization)
 			if prunable(phases, x, y, tol)
+				println("Pruning...")
 				remove_subtree!(node_order, node)
+				println(size(node_order))
+			end
 		end
 	end
 end
@@ -97,18 +90,18 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 end
 
 # subtree
-function remove_subtree!(nv::AbstractVector{<:Node}, parent_node::Node)
+function remove_subtree!(nodes::AbstractVector{<:Node}, root_of_subtree::Node)
     # Given a vector of node and a node, remove
 	# all the node that are child of the node
 	# TODO Should remove there relationship as well??
 	# TODO Will GC take care?
 	to_be_removed = Int[]
-    for (idx, node) in enumerate(nv)
-		if is_child(parent_node, node) && parent_node != node
+    for (idx, node) in enumerate(nodes)
+		if is_child(root_of_subtree, node) && root_of_subtree != node
 			push!(to_be_removed, idx)
 		end
 	end
-	deleteat!(nv, to_be_removed)
+	deleteat!(nodes, to_be_removed)
 end
 
 function pos_res_thresholding(phases::AbstractVector{<:PhaseTypes},
