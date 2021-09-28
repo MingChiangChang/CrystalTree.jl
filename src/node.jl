@@ -1,6 +1,6 @@
 # Do breadth-first-search
 # Recursive?
-using CrystalShift: CrystalPhase
+#using CrystalShift: CrystalPhase
 using PhaseMapping: Phase
 PhaseTypes = Union{Phase, CrystalPhase}
 
@@ -30,6 +30,16 @@ end
 function is_child(parent::Node, child::Node)
 	return issubset([p.id for p in parent.current_phases],
 	               [p.id for p in child.current_phases])
+end
+
+function get_child_node_indicies(parent::Node, l_nodes::AbstractVector{Node})
+    indicies = Int64[]
+	for (idx, node) in enumerate(l_nodes)
+        if is_child(parent, node)
+            push!(indicies, idx)
+		end
+	end
+	indicies
 end
 
 function is_immidiate_child(parent::Node, child::Node)
