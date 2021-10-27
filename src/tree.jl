@@ -8,7 +8,6 @@ using LinearAlgebra
 using Base.Threads
 using CrystalShift: reconstruct!
 
-
 struct Tree{T, CP<:AbstractVector{T}, DP<:Int}
     nodes::CP
     depth::DP # Store for convenience
