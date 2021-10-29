@@ -1,5 +1,5 @@
 module CrystalTree
-using CrystalShift: CrystalPhase
+using CrystalShift: CrystalPhase, optimize!
 using PhaseMapping: Phase
 
 include("node.jl")
