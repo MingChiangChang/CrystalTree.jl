@@ -19,7 +19,7 @@ std_θ = [1., 1., 1.]
 path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
+s = split(read(f, String), "#\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)
@@ -34,7 +34,7 @@ y /= max(y...)
 
 # Tests: Tree construction, BFT, removing multiple child
 
-a = Tree(cs, 3)
+a = Tree(cs, 2)
 # println("done")
 # @test size(a.nodes)[1]==121
 # traversal = bft(a)
@@ -44,7 +44,7 @@ a = Tree(cs, 3)
 # end
 
 # TODO find bound error
-@time res = search!(a, bft, x, y, std_noise, mean_θ, std_θ, 32, true, pos_res_thresholding, 1)
+@time res = search!(a, bft, x, y, std_noise, mean_θ, std_θ, 16, true, pos_res_thresholding, 1)
 residual = Float64[]
 
 ind = argmin([norm(i.(x)-y) for i in res])

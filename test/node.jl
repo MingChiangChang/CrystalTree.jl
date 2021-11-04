@@ -1,5 +1,5 @@
 using PhaseMapping: readsticks
-#using CrystalShift: CrystalPhase
+using CrystalShift: CrystalPhase
 using Test
 
 include("../src/node.jl")

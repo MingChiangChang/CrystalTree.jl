@@ -75,5 +75,8 @@ get_level(node::Node) = size(node.current_phases)[1]
 get_phase_ids(node::Node) = [p.id for p in node.current_phases]
 
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
-    return [n for n in nodes if get_level(n)==level]
+    return [n for n in nodes if get_level(n)==level] # O(n) for now, can improve to O(1)
 end
+
+(node::Node)(x::AbstractVector) = Node.current_phases(x)
+
