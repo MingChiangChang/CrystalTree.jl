@@ -3,7 +3,7 @@ using CrystalShift: CrystalPhase
 
 include("../src/node.jl")
 include("../src/tree.jl")
-include("../src/bestfirstsearch.jl")
+include("../src/search.jl")
 
 std_noise = .01
 mean_θ = [1., 1., 2.]
