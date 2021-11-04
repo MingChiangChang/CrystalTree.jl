@@ -54,18 +54,33 @@ bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::In
 function bestfirstsearch(tree::Tree, x::AbstractVector,
                          r::AbstractVector, max_search::Int)
     searched_node = Vector{<:Node}(undef, max_search*tree.depth)
-    record_node(searched_node, search_level!(tree, 0, x, y))
+    record_node!(searched_node, search_level!(tree, 0, x, y))
     for level in 1:tree.depth
-        ranked_node = evaluate_nodes_at_level(tree, level, x, r) 
+        ranked_nodes = evaluate_nodes_at_level(tree, level, x, r) 
+        @threads for node in ranked_nodes[start:max_search]
+            optimize!(node.current_phases, x, y, std_noise,
+                  mean, std, maxiter=maxiter, regularization=regularization)
+        end
+        record_node!(searched_node, ranked_nodes)
     end
 end
     
 function search_level!(tree::Tree, level::Int,
                        x::AbstractVector, y::AbstractVector) 
     nodes = get_nodes_at_level(tree.nodes, level)
-    phases = optimize!(node.current_phases, x, y, std_noise,
-			          mean, std, maxiter=maxiter, regularization=regularization)
+    @threads for node in nodes
+        optimize!(node.current_phases, x, y, std_noise,
+			     mean, std, maxiter=maxiter, regularization=regularization)
+    end
+    nodes
 end
+
+function record_node!(node_array::AbstractVector, searched_nodes::AbstractVector)
+    ind = find_first_unassigned(node_array)
+    node_array[ind:ind+size(serached_nodes)] = searched_nodes
+end
+
+
 
 function evaluate(ref_nodes::AbstractVector{Node}, node::Node, 
                   x::AbstractVector, r::AbstractVector) 
