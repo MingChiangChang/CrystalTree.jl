@@ -3,7 +3,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     std::AbstractVector, maxiter=32, regularization::Bool=true,
     prunable::Function=(p, x, y, t)->false, tol::Real=1e-3)
     
-    resulting_nodes = Vector{Vector{<:CrystalPhase}}()
+    resulting_nodes = Node[]
     node_order = traversal_func(t)
     for level in 1:t.depth
         nodes = get_nodes_at_level(node_order, level)
@@ -11,7 +11,9 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         @threads for node in nodes
             @time phases = optimize!(node.current_phases, x, y, std_noise,
                   mean, std, maxiter=maxiter, regularization=regularization)
-            push!(resulting_nodes, phases)
+            recon = phases.(x)
+            node = Node(node.current_phases, node.child_node, recon, cos_angle(recon, y))
+            push!(resulting_nodes, node)
             if level<t.depth && prunable(phases, x, y, tol)
                 println("Pruning...")
                 push!(deleting, get_child_node_indicies(node, node_order)...)
@@ -49,38 +51,86 @@ end
 """
 bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::Int)
 
-
 """
-function bestfirstsearch(tree::Tree, x::AbstractVector,
-                         r::AbstractVector, max_search::Int)
-    searched_node = Vector{<:Node}(undef, max_search*tree.depth)
-    record_node!(searched_node, search_level!(tree, 0, x, y))
+function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, 
+                         std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
+                         max_search::Int; maxiter::Int=32, regularization::Bool=false)
+    searched_node = Vector{Node}(undef, max_search*tree.depth)
+
     for level in 1:tree.depth
-        ranked_nodes = evaluate_nodes_at_level(tree, level, x, r) 
-        @threads for node in ranked_nodes[start:max_search]
+        println("Working on level $(level)")
+        if level != 1
+            ranked_nodes = rank_nodes_at_level(tree, level, r) 
+        else
+            ranked_nodes = get_nodes_at_level(tree.nodes, level)
+        end    
+
+        num_search = min(max_search, size(ranked_nodes)[1])
+        println("num of search = $(num_search)")
+        @threads for node in ranked_nodes[1:num_search]
             optimize!(node.current_phases, x, y, std_noise,
-                  mean, std, maxiter=maxiter, regularization=regularization)
+                  mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
         end
-        record_node!(searched_node, ranked_nodes)
+        #record_node!(searched_node, ranked_nodes)
     end
 end
-    
-function search_level!(tree::Tree, level::Int,
-                       x::AbstractVector, y::AbstractVector) 
+
+# function record_node!(node_array::AbstractVector, searched_nodes::AbstractVector)
+#     ind = find_first_unassigned(node_array)
+#     node_array[ind:ind+size(serached_nodes)] = searched_nodes
+# end
+
+function rank_nodes_at_level(tree::Tree, level::Int,
+                             r::AbstractVector)
     nodes = get_nodes_at_level(tree.nodes, level)
-    @threads for node in nodes
-        optimize!(node.current_phases, x, y, std_noise,
-			     mean, std, maxiter=maxiter, regularization=regularization)
+    inner = matching_pursuit(tree, nodes, r::AbstractVector)
+    order = sortperm(inner)
+    return nodes[order]
+end
+
+""" 
+Take a tree and an array node, return the estimated inner product
+of the node using the first level node.
+(This is a temperal solution, could use the immidiate parent node 
+and a first level node to do the estimate but again has to take into
+the account that the parant node may not have been optimized. Search 
+along the path within the tree is more desired...
+"""
+function matching_pursuit(tree::Tree, nodes::AbstractVector{<:Node},
+                          y::AbstractVector)
+    first_level_nodes = get_nodes_at_level(tree.nodes, 1)
+   
+    [matching_pursuit(first_level_nodes, node, y) for node in nodes]
+end
+
+function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
+                          node::Node, y::AbstractVector)
+    ref_nodes = find_ref_nodes(cadidate_nodes, node)
+    inner_sum = sum_inner(ref_nodes)
+    cos_angle(inner_sum, y)
+end
+
+
+
+function find_ref_nodes(candidate_nodes::AbstractVector{<:Node}, 
+                        phase_ids::AbstractVector)
+    node_indices = Vector{Int}()
+    candidate_ids = [get_phase_ids(c)[1] for c in candidate_nodes]
+    println(candidate_ids)
+    for (ind, id) in enumerate(candidate_ids)
+        if id in phase_ids
+            push!(node_indices, ind)
+        end
     end
-    nodes
+    println("Node indices: $(node_indices)")
+    candidate_nodes[node_indices]
 end
 
-function record_node!(node_array::AbstractVector, searched_nodes::AbstractVector)
-    ind = find_first_unassigned(node_array)
-    node_array[ind:ind+size(serached_nodes)] = searched_nodes
+function find_ref_nodes(candidate_nodes::AbstractVector{<:Node}, 
+                        node::Node)
+    phase_ids = [p.id for p in node.current_phases]
+    find_ref_nodes(candidate_nodes, phase_ids)
 end
-
-
 
 function evaluate(ref_nodes::AbstractVector{Node}, node::Node, 
                   x::AbstractVector, r::AbstractVector) 
@@ -91,14 +141,3 @@ function evaluate(ref_nodes::AbstractVector{Node}, nodes::AbstractVector{Node},
                   x::AbstractVector, r::AbstractVector) 
 
 end
-
-function cos_angle(x1::AbstractArray, x2::AbstractArray)
-    x1'x2/(norm(x1)*norm(x2))
-end
-
-function cos_angle(node1::Node, node2::Node, x::AbstractArray)
-    x1, x2 = node1(x), node2(x)
-    x1'x2/(norm(x1)*norm(x2))
-end
-
-function find_ref_node(ref_nodes::AbstractVector{<:Node}, node::Node)

@@ -1,5 +1,5 @@
 using Test
-using CrystalShift: CrystalPhase
+using CrystalShift: CrystalPhase, optimize!
 
 include("../src/node.jl")
 include("../src/tree.jl")
@@ -22,9 +22,12 @@ end
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
 println("$(size(cs)) phase objects created!")
-a = Tree(cs, 3)
+tree = Tree(cs, 2)
 x = collect(8:.035:45)
 y = zero(x)
-@time for nodes in a.nodes[17:45]
-    reconstruct!(nodes.current_phases, x, y)
+@time for node in tree.nodes[10:50]
+    node.current_phases(x, y)
 end
+
+result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 50,
+                        maxiter=32, regularization=false) # should return a bunch of node
