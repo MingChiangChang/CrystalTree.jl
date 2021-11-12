@@ -64,6 +64,7 @@ end
 
 get_level(node::Node) = size(node.current_phases)[1]
 get_phase_ids(node::Node) = [p.id for p in node.current_phases]
+get_inner(nodes::AbstractVector{<:Node}) = [node.inner for node in nodes]
 
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
     return [n for n in nodes if get_level(n)==level] # O(n) for now, can improve to O(1)
@@ -83,7 +84,16 @@ node.current_phases = optimized_phases
 return residuals
 end
 
+cos_angle(x1::AbstractVector, x2::AbstractVector) = x1'x2/(norm(x1)*norm(x2))
+
 function cos_angle(node1::Node, node2::Node, x::AbstractArray)
     x1, x2 = node1(x), node2(x)
-    x1'x2/(norm(x1)*norm(x2))
+    cos_angle(x1, x2)
+end
+
+function sum_inner(nodes::AbstractVector{<:Node})
+    s = zeros(size(nodes[1].inner)[1]) # this is gross
+    for node in nodes
+        s += node.inner
+	end
 end
