@@ -1,19 +1,21 @@
 # Do breadth-first-search
 # Recursive?
-#using CrystalShift: CrystalPhase
-using PhaseMapping: Phase
+
 PhaseTypes = Union{Phase, CrystalPhase}
 
-struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector}
+struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector, R<:AbstractVector, I<:Real}
 	current_phases::CP
 	child_node::CN
+
+	recon::R
+	inner::I
 end
 
-Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[]) # Root
-Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[])
-Node(phase::Phase) = Node([phase], Node{<:Phase}[])
-Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[])
-Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[])
+Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], Float64[], 0) # Root
+Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[], Float64[], 0)
+Node(phase::Phase) = Node([phase], Node{<:Phase}[], Float64[], 0)
+Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Float64[], 0)
+Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[], Float64[], 0)
 
 function Base.show(io::IO, node::Node)
     println("Phases:")
@@ -45,7 +47,7 @@ end
 function is_immidiate_child(parent::Node, child::Node)
     return (issubset([p.id for p in parent.current_phases],
 	         [p.id for p in child.current_phases]) &&
-			  (get_level(parent)[1]-get_level(child)[1] == -1))
+			  (get_level(parent)-get_level(child) == -1))
 end
 
 function add_child!(parent::Node, child::Node)
@@ -60,17 +62,6 @@ function remove_child!(parent::Node, child::Node)
 	end
 end
 
-function fit!(node::Node, x::AbstractVector, y::AbstractVector,
-	          std_noise::Real, mean::AbstractVector, std::AbstractVector,
-			  maxiter=32, regularization::Bool=true)
-    optimized_phases, residuals = fit_phases(node.current_phases, x, y,
-	                                          std_noise, mean, std,
-	                                          maxiter=maxiter,
-											  regularization=regularization)
-	node.current_phases = optimized_phases
-	return residuals
-end
-
 get_level(node::Node) = size(node.current_phases)[1]
 get_phase_ids(node::Node) = [p.id for p in node.current_phases]
 
@@ -78,5 +69,21 @@ function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
     return [n for n in nodes if get_level(n)==level] # O(n) for now, can improve to O(1)
 end
 
-(node::Node)(x::AbstractVector) = Node.current_phases(x)
 
+(node::Node)(x::AbstractVector) = node.current_phases.(x)
+
+function fit!(node::Node, x::AbstractVector, y::AbstractVector,
+	std_noise::Real, mean::AbstractVector, std::AbstractVector,
+	maxiter=32, regularization::Bool=true)
+optimized_phases, residuals = fit_phases(node.current_phases, x, y,
+									std_noise, mean, std,
+									maxiter=maxiter,
+									regularization=regularization)
+node.current_phases = optimized_phases
+return residuals
+end
+
+function cos_angle(node1::Node, node2::Node, x::AbstractArray)
+    x1, x2 = node1(x), node2(x)
+    x1'x2/(norm(x1)*norm(x2))
+end
