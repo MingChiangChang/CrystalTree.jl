@@ -1,4 +1,4 @@
-#module CrystalTree
+module CrystalTree
 using CrystalShift: CrystalPhase, optimize!
 using PhaseMapping: Phase
 
@@ -9,4 +9,4 @@ include("tree.jl")
 include("search.jl")
 
 
-#end
+end
