@@ -3,6 +3,9 @@
 - [x] Define Node struct
 - [x] Proper test script for BFS
 - [x] Breadth-first-search
+- [ ] Implement best first search
+    - [ ] Build lookup table structure
+    - [ ] Function fro proper lookup
 - [ ] Depth-first-search (low priority)
 - [ ] Math model for probabilistic estimation
 - [ ] Might want to put proper docstring
