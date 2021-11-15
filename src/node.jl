@@ -2,8 +2,9 @@
 # Recursive?
 
 PhaseTypes = Union{Phase, CrystalPhase}
+abstract type AbstractNode end
 
-struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector, R<:AbstractVector, I<:Real}
+struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector, R<:AbstractVector, I<:Real} <: AbstractNode
 	current_phases::CP
 	child_node::CN
 
@@ -11,11 +12,18 @@ struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector, R<:AbstractVector, I<:
 	inner::I
 end
 
-Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], Float64[], 0) # Root
-Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[], Float64[], 0)
-Node(phase::Phase) = Node([phase], Node{<:Phase}[], Float64[], 0)
-Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Float64[], 0)
-Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[], Float64[], 0)
+Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], Float64[], 0.) # Root
+Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[], Float64[], 0.)
+Node(phase::Phase) = Node([phase], Node{<:Phase}[], Float64[], 0.)
+Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Float64[], 0.)
+
+function Node(CPs::AbstractVector{<:CrystalPhase},
+	          child_nodes::AbstractVector,
+			  x::AbstractVector, y::AbstractVector) 
+	recon = CPs.(x)
+    Node(CPs, child_nodes, recon, cos_angle(y, recon))
+end
+
 
 function Base.show(io::IO, node::Node)
     println("Phases:")
@@ -23,6 +31,7 @@ function Base.show(io::IO, node::Node)
 		println("    $(phase.name)")
 	end
 	println("Number of child nodes: $(size(node.child_node))")
+	println("Inner product: $(node.inner)")
 end
 
 function Base.:(==)(a::Node, b::Node)
@@ -70,18 +79,17 @@ function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
     return [n for n in nodes if get_level(n)==level] # O(n) for now, can improve to O(1)
 end
 
-
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
 
 function fit!(node::Node, x::AbstractVector, y::AbstractVector,
 	std_noise::Real, mean::AbstractVector, std::AbstractVector,
 	maxiter=32, regularization::Bool=true)
-optimized_phases, residuals = fit_phases(node.current_phases, x, y,
+    optimized_phases, residuals = fit_phases(node.current_phases, x, y,
 									std_noise, mean, std,
 									maxiter=maxiter,
 									regularization=regularization)
-node.current_phases = optimized_phases
-return residuals
+    node.current_phases = optimized_phases
+	return residuals
 end
 
 cos_angle(x1::AbstractVector, x2::AbstractVector) = x1'x2/(norm(x1)*norm(x2))
@@ -91,9 +99,12 @@ function cos_angle(node1::Node, node2::Node, x::AbstractArray)
     cos_angle(x1, x2)
 end
 
-function sum_inner(nodes::AbstractVector{<:Node})
-    s = zeros(size(nodes[1].inner)[1]) # this is gross
+function sum_recon(nodes::AbstractVector{<:Node})
+    s = zeros(size(nodes[1].recon)[1]) # this is gross
     for node in nodes
-        s += node.inner
+		r = node.recon./maximum(node.recon)
+        s += r
 	end
+    
+	s./maximum(s)
 end
