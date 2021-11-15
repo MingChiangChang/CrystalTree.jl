@@ -69,7 +69,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
         println("num of search = $(num_search)")
         
         @threads for i in 1:num_search
-            println(ranked_nodes[i])
+            
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
                   mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
