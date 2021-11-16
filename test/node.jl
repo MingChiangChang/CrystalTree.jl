@@ -17,7 +17,7 @@ end
 
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
-println("$(size(cs)) phase objects created!")
+println("$(size(cs, 1)) phase objects created!")
 
 # Creating objects for testing
 root = Node{CrystalPhase}()
@@ -45,4 +45,3 @@ fake_tree = [root, node1, node2, node3, node4]
     @test get_phase_ids(node4) == [0, 1, 2]
     @test get_nodes_at_level(fake_tree, 3) == [node4]
 end
-

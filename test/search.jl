@@ -6,9 +6,9 @@ include("../src/node.jl")
 include("../src/tree.jl")
 include("../src/search.jl")
 
-std_noise = .01
+std_noise = .05
 mean_θ = [1., 1., .2]
-std_θ = [.5, 10., 1.]
+std_θ = [.2, 10., 1.]
 
 # CrystalPhas object creation
 path = "data/"
@@ -22,7 +22,7 @@ end
 
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
-println("$(size(cs)) phase objects created!")
+println("$(size(cs, 1)) phase objects created!")
 tree = Tree(cs[1:15], 3)
 x = collect(8:.035:45)
 y = zero(x)
@@ -31,6 +31,6 @@ y = zero(x)
 end
 
 @time result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
-                        maxiter=32, regularization=true) # should return a bunch of node
+                        maxiter=16, regularization=true) # should return a bunch of node
 
 print("done")
