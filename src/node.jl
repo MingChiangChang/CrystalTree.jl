@@ -15,6 +15,7 @@ end
 Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], Float64[], 0.) # Root
 Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[], Float64[], 0.)
 Node(phase::Phase) = Node([phase], Node{<:Phase}[], Float64[], 0.)
+Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[], Float64[], 0.)
 Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Float64[], 0.)
 
 function Node(CPs::AbstractVector{<:CrystalPhase},
@@ -75,8 +76,10 @@ get_level(node::Node) = size(node.current_phases)[1]
 get_phase_ids(node::Node) = [p.id for p in node.current_phases]
 get_inner(nodes::AbstractVector{<:Node}) = [node.inner for node in nodes]
 
+# O(n) for now, can improve to O(1)
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
-    return [n for n in nodes if get_level(n)==level] # O(n) for now, can improve to O(1)
+	idx = [i for i in eachindex(nodes) if get_level(nodes[i])==level]
+    return @view nodes[idx] 
 end
 
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
@@ -100,11 +103,10 @@ function cos_angle(node1::Node, node2::Node, x::AbstractArray)
 end
 
 function sum_recon(nodes::AbstractVector{<:Node})
-    s = zeros(size(nodes[1].recon), 1) # this is gross
+    s = zeros(size(nodes[1].recon, 1)) # this is gross
     for node in nodes
 		r = node.recon./maximum(node.recon)
         s += r
 	end
-    
 	s./maximum(s)
 end

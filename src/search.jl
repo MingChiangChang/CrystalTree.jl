@@ -56,7 +56,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                          max_search::Int; maxiter::Int=32, regularization::Bool=false)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
-    print("searched_node is initiated to have size $(size(searched_node, 1))")
+    println("searched_node is initiated to have size $(size(searched_node, 1))")
     for level in 1:tree.depth
         println("Working on level $(level)")
         if level != 1
@@ -71,6 +71,35 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
                   mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
+            recon = phases.(x)
+            inner = cos_angle(recon, y)
+            new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
+            ranked_nodes[i] = new_node
+        end
+        record_node!(searched_node, ranked_nodes[1:num_search])
+    end
+    searched_node
+end
+
+function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, 
+                std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
+                max_search::AbstractArray; maxiter::Int=32, regularization::Bool=false)
+    searched_node = Vector{Node}(undef, sum(max_search))
+    println("searched_node is initiated to have size $(size(searched_node, 1))")
+    for level in 1:tree.depth
+        println("Working on level $(level)")
+        if level != 1
+            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r) 
+        else
+            ranked_nodes = get_nodes_at_level(tree.nodes, level)
+        end    
+
+        num_search = min(max_search[level], size(ranked_nodes, 1))
+        println("num of search = $(num_search)")
+
+        @threads for i in 1:num_search
+            phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
+            mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             inner = cos_angle(recon, y)
             new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
@@ -120,8 +149,8 @@ end
 function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
                           node::Node, y::AbstractVector)
     ref_nodes = find_ref_nodes(cadidate_nodes, node)
-    inner_sum = sum_recon(ref_nodes)
-    return cos_angle(inner_sum, y)
+    recon_sum = sum_recon(ref_nodes)
+    return cos_angle(recon_sum, y)
 end
 
 function find_ref_nodes(candidate_nodes::AbstractVector{<:Node}, 
@@ -136,7 +165,7 @@ function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
             push!(node_indices, ind)
         end
     end
-    #println("Node indices: $(node_indices)")
+
     candidate_nodes[node_indices]
 end
 
@@ -146,12 +175,9 @@ function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
     find_ref_nodes(candidate_nodes, phase_ids)
 end
 
-# function evaluate(ref_nodes::AbstractVector{Node}, node::Node, 
-#                   x::AbstractVector, r::AbstractVector) 
-#     cos_angle(find_ref_node(ref_nodes, node), node, x)
-# end
 
-# function evaluate(ref_nodes::AbstractVector{Node}, nodes::AbstractVector{Node},
-#                   x::AbstractVector, r::AbstractVector) 
+function tree_MP(tree::Tree, node::Node, y::AbstractVector)
+    ids = sort(get_phase_ids(node))
+    root = tree[1]
 
-# end
+end

@@ -36,22 +36,24 @@ function Tree(phases::AbstractVector{<:PhaseTypes}, depth::Int)
 	Tree(nodes, depth)
 end
 
+Base.view(tree::Tree, i) = Base.view(tree.nodes, i)
 Base.size(t::Tree) = size(t.nodes)
 Base.size(t::Tree, dim::Int) = size(t.nodes, dim)
 Base.getindex(t::Tree, i::Int) = Base.getindex(t.nodes, i)
+Base.getindex(t::Tree, I::Vector{Int}) = [tree[i] for i in I]
 
 function bft(t::Tree)
     # Breadth-first traversal, return an array of
 	# Node with the b-f order
-	traversal = Node[]
+	traversal = Int[]
 	for i in 1:t.depth
-	    for node in t.nodes
-            if get_level(node) == i
-				push!(traversal, node)
+	    for j in eachindex(t.nodes)
+            if get_level(t.nodes[j]) == i
+				push!(traversal, j)
 			end
 	    end
 	end
-	traversal
+	@view tree[traversal]
 end
 
 bft(t::Tree, level::Int) = get_nodes_at_level(t.nodes, level)
