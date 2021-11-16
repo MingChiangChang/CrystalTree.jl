@@ -37,6 +37,7 @@ function Tree(phases::AbstractVector{<:PhaseTypes}, depth::Int)
 end
 
 Base.size(t::Tree) = size(t.nodes)
+Base.size(t::Tree, dim::Int) = size(t.nodes, dim)
 Base.getindex(t::Tree, i::Int) = Base.getindex(t.nodes, i)
 
 function bft(t::Tree)

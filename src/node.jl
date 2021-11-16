@@ -100,7 +100,7 @@ function cos_angle(node1::Node, node2::Node, x::AbstractArray)
 end
 
 function sum_recon(nodes::AbstractVector{<:Node})
-    s = zeros(size(nodes[1].recon)[1]) # this is gross
+    s = zeros(size(nodes[1].recon), 1) # this is gross
     for node in nodes
 		r = node.recon./maximum(node.recon)
         s += r

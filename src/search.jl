@@ -56,7 +56,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                          max_search::Int; maxiter::Int=32, regularization::Bool=false)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
-    print("searched_node is initiated to have size $(size(searched_node))")
+    print("searched_node is initiated to have size $(size(searched_node, 1))")
     for level in 1:tree.depth
         println("Working on level $(level)")
         if level != 1
@@ -64,18 +64,16 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
         end    
-        #println(size(ranked_nodes)[1])
-        num_search = min(max_search, size(ranked_nodes)[1])
+        
+        num_search = min(max_search, size(ranked_nodes, 1))
         println("num of search = $(num_search)")
         
         @threads for i in 1:num_search
-            
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
                   mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             inner = cos_angle(recon, y)
             new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
-            #println(typeof(new_node))
             ranked_nodes[i] = new_node
         end
         record_node!(searched_node, ranked_nodes[1:num_search])
@@ -85,9 +83,7 @@ end
 
 function record_node!(node_array::AbstractVector, searched_nodes::AbstractVector)
     ind = find_first_unassigned(node_array)
-    println("First unassigned element is at $(ind)")
-    println("Search_node has size $(size(searched_nodes))")
-    node_array[ind:ind+size(searched_nodes)[1]-1] = searched_nodes
+    node_array[ind:ind+size(searched_nodes, 1)-1] = searched_nodes
 end
 
 function rank_nodes_at_level(tree::Tree, level::Int,
@@ -110,8 +106,10 @@ along the path within the tree is more desired...
 function matching_pursuit(tree::Tree, nodes::AbstractVector{<:Node},
                           y::AbstractVector)
     first_level_nodes = get_nodes_at_level(tree.nodes, 1)
-   
-    [matching_pursuit(first_level_nodes, node, y) for node in nodes]
+    inner_arr = zeros(size(nodes, 1))
+    @threads for i in eachindex(nodes)
+        matching_pursuit(first_level_nodes, nodes[i], y)
+    end
 end
 
 function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
@@ -122,7 +120,6 @@ end
 function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
                           node::Node, y::AbstractVector)
     ref_nodes = find_ref_nodes(cadidate_nodes, node)
-    #println(size(ref_nodes))
     inner_sum = sum_recon(ref_nodes)
     return cos_angle(inner_sum, y)
 end

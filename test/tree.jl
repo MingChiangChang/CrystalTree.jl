@@ -2,12 +2,10 @@
 using DelimitedFiles
 using Test
 using Plots
-#include("../../Crystallography_based_shifting/src/CrystalShift.jl")
 
 using PhaseMapping: Lorentz
 using CrystalShift: CrystalPhase, optimize!
 
-# include("../../Crystallography_based_shifting/src/CrystalShift.jl")
 include("../src/node.jl")
 include("../src/tree.jl")
 include("../src/search.jl")

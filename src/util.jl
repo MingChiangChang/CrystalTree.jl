@@ -4,7 +4,7 @@ function find_first_unassigned(arr::AbstractArray)
             return i
         end
     end
-    return size(arr)[1]
+    return size(arr, 1)
 end
 
 function cos_angle(x1::AbstractArray, x2::AbstractArray)
