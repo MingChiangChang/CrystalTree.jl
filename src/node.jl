@@ -129,3 +129,24 @@ function sum_recon(nodes::AbstractVector{<:Node})
 	end
 	s./maximum(s) # Remove normalizzation
 end
+
+function residual(node::Node, θ::AbstractVector,
+	              x::AbstractVector, y::AbstractVector)
+	residual = copy(y)
+	
+	for phase in node.current_phases
+	    full_θ = get_eight_params(phase, θ)
+	    residual .-= CrystalPhase(phase, θ).(x)
+		plot!(x, residual)
+	end
+
+	return norm(residual)
+end
+
+# function residual(node::Node, x::AbstractVector, y::AbstractVector)
+# 	θ = Float64[]
+#     for phase in node.current_phases
+# 		θ = [θ; get_free_params(phase)]
+# 	end
+#     residual(node, θ, x, y)
+# end
