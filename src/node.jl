@@ -44,7 +44,7 @@ function is_child(parent::Node, child::Node)
 	               [p.id for p in child.current_phases])
 end
 
-function get_child_node_indicies(parent::Node, l_nodes::AbstractVector{Node})
+function get_child_node_indicies(parent::Node, l_nodes)
     indicies = Int64[]
 	for (idx, node) in enumerate(l_nodes)
         if is_child(parent, node)
@@ -82,6 +82,25 @@ function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
     return @view nodes[idx] 
 end
 
+function get_node_with_id(nodes::AbstractVector, id::Int)
+    for i in eachindex(nodes)
+		if get_phase_ids(nodes[i])[1] == id
+			return @view nodes[i, :]
+		end
+	end
+end
+
+function get_node_with_id(nodes::AbstractVector, ids::AbstractVector)
+	indices = Vector{Int}()
+    for i in eachindex(nodes)
+		if get_phase_ids(nodes[i])[1] in ids
+			push!(indices, i)
+		end
+	end
+	println(indices)
+	return @view nodes[indices]
+end
+
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
 
 function fit!(node::Node, x::AbstractVector, y::AbstractVector,
@@ -103,10 +122,10 @@ function cos_angle(node1::Node, node2::Node, x::AbstractArray)
 end
 
 function sum_recon(nodes::AbstractVector{<:Node})
-    s = zeros(size(nodes[1].recon, 1)) # this is gross
+    s = zeros(size(nodes[1].recon, 1))
     for node in nodes
 		r = node.recon./maximum(node.recon)
         s += r
 	end
-	s./maximum(s)
+	s./maximum(s) # Remove normalizzation
 end

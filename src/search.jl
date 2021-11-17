@@ -9,7 +9,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         nodes = get_nodes_at_level(node_order, level)
         deleting = Set()
         @threads for node in nodes
-            @time phases = optimize!(node.current_phases, x, y, std_noise,
+            phases = optimize!(node.current_phases, x, y, std_noise,
                   mean, std, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             node = Node(node.current_phases, node.child_node, recon, cos_angle(recon, y))
@@ -19,8 +19,8 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
                 push!(deleting, get_child_node_indicies(node, node_order)...)
             end
         end
-        deleteat!(node_order, sort([deleting...]))
-        println(size(node_order))
+        node_order = @view node_order[filter!(x->x ∉ deleting, collect(1:size(node_order, 1)))]
+        println(size(node_order, 1))
     end
     resulting_nodes
 end
@@ -178,6 +178,56 @@ end
 
 function tree_MP(tree::Tree, node::Node, y::AbstractVector)
     ids = sort(get_phase_ids(node))
-    root = tree[1]
+    path_nodes = get_path_node(tree, ids)
+    recon_sum =  estimate_recon_sum(path_nodes,
+                                    get_nodes_at_level(tree, 1),
+                                    ids)
+    return cos_angle(recon_sum, y)
+end
 
+#is_immidiate_child must be sorted
+function get_path_node(tree::Tree, ids::AbstractVector)
+    path_nodes = Vector{Node}(undef, size(ids, 1))
+    current_node = tree[1]
+    
+    for i in eachindex(ids)
+        current_node = find_child_w_id(current_node, ids[i])
+        path_nodes[i] = current_node
+    end
+    
+    return path_nodes
+end
+
+function find_child_w_id(node::Node, id::Int)
+    ids = union(get_phase_ids(node), [id])
+    
+    for n in node.child_node
+        if ids == get_phase_ids(n)
+            return n
+        end
+    end
+end
+
+function estimate_recon_sum(path_nodes::AbstractVector{Node},
+                            first_level_nodes::AbstractVector{Node},
+                            ids::AbstractVector)
+    recon_sum = zeros(size(path_nodes[1].inner, 1))
+    for i in reverse(eachindex(path_nodes))
+        if isempty(ids)
+            return recon_sum
+        end
+
+        node_ids = get_phase_ids(path_nodes[i])
+        if !isempty(path_nodes[i].recon) && issubset(ids, node_ids)
+            recon_sum .+= path_nodes[i].recon
+            filter!(x->x ∉ node_ids, ids)
+        end
+    end
+    if !isempty(ids)
+        nodes = get_node_with_id(ids)
+        for n in nodes
+            recon_sum .+= n.recon
+        end
+    end
+    return recon_sum
 end

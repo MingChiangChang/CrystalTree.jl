@@ -53,7 +53,7 @@ function bft(t::Tree)
 			end
 	    end
 	end
-	@view tree[traversal]
+	@view t[traversal]
 end
 
 bft(t::Tree, level::Int) = get_nodes_at_level(t.nodes, level)

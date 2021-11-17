@@ -30,7 +30,7 @@ y = zero(x)
     node.current_phases(x, y)
 end
 
-@time result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
+@btime result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
                         maxiter=16, regularization=true) # should return a bunch of node
 
 print("done")

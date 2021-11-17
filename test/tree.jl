@@ -45,7 +45,7 @@ println(size(a))
 
 # TODO find bound error
 @time res = search!(a, bft, x, y, std_noise,
-                    mean_θ, std_θ, 32, false,
+                    mean_θ, std_θ, 32, true,
                     pos_res_thresholding, 1.)
 residual = Float64[]
 
