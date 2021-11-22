@@ -22,7 +22,7 @@ Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Fl
 
 function Node(CPs::AbstractVector{<:CrystalPhase},
 	          child_nodes::AbstractVector,
-			  x::AbstractVector, y::AbstractVector) 
+			  x::AbstractVector, y::AbstractVector)
 	recon = CPs.(x)
     Node(CPs, child_nodes, recon, cos_angle(y, recon))
 end
@@ -81,7 +81,7 @@ get_inner(nodes::AbstractVector{<:Node}) = [node.inner for node in nodes]
 # O(n) for now, can improve to O(1)
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
 	idx = [i for i in eachindex(nodes) if get_level(nodes[i])==level]
-    return @view nodes[idx] 
+    return @view nodes[idx]
 end
 
 function get_node_with_id(nodes::AbstractVector, id::Int)
@@ -135,7 +135,7 @@ end
 function residual(node::Node, θ::AbstractVector,
 	              x::AbstractVector, y::AbstractVector)
 	residual = copy(y)
-	
+
 	for phase in node.current_phases
 	    full_θ = get_eight_params(phase, θ)
 	    residual .-= CrystalPhase(phase, θ).(x)
