@@ -20,7 +20,7 @@ function hessian_of_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 							  y::AbstractVector, std_noise::RealOrVec,
 							  mean_θ::RealOrVec, std_θ::RealOrVec)
 	function f(θ)
-		sos_objective(node, θ, x, y, std_noise) + regularizer(θ, mean_θ, std_θ)
+		sos_objective(node, θ, x, y, std_noise) + regularizer(node, θ, mean_θ, std_θ)
 	end
 	ForwardDiff.hessian(f, θ)
 end
@@ -35,8 +35,9 @@ function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 	return sum(abs2, residual)
 end
 
-function regularizer(θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
-	par = @. (θ - mean_θ) / std_θ
+function regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
+    θ_c = remove_act_from_θ(θ, node.current_phases)
+	par = @. (θ_c - mean_θ) / std_θ
 	sum(abs2, par)
 end
 
@@ -48,7 +49,7 @@ function negative_log_marginal_likelihood(Σ⁻¹, y)
 		println("Σ⁻¹ is not spd..")
 		return 10000
 	end
-	return logdet(Σ⁻¹) + d/2 * log(dot(y, Σ⁻¹, y)) # + constant
+	return logdet(Σ⁻¹) #+ d/2 * log(dot(y, Σ⁻¹, y)) # + constant
 end
 
 marginal_likelihood(x...) = exp(-negative_log_marginal_likelihood(x...))
