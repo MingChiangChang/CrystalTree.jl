@@ -5,10 +5,10 @@
 function log_marginal_likelihood(node::Node, θ::AbstractVector, x::AbstractVector,
 								 y::AbstractVector, std_noise::RealOrVec,
 								 mean_θ::RealOrVec, std_θ::RealOrVec)
-	H = hessian_residual(node, θ, x, y, std_noise, mean_θ, std_θ)
+	H = hessian_of_objective(node, θ, x, y, std_noise, mean_θ, std_θ)
 	# calculate marginal likelihood
 	Σ⁻¹ = H # reinterpret Hessian of minimization problem as inverse of covariance matrix
-	log_marginal_likelihood(Σ⁻¹, θ) # TODO: do we need to scale by "height" of distribution?
+	negative_log_marginal_likelihood(Σ⁻¹, θ) # TODO: do we need to scale by "height" of distribution?
 end
 
 using ForwardDiff
@@ -29,22 +29,26 @@ end
 function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 				  	   y::AbstractVector, std_noise::RealOrVec)
 	residual = copy(y)
-	for phase in node.current_phases
-	    full_θ = get_eight_params(phase, θ)
-	    residual .-= CrystalPhase(phase, θ).(x)
-	end
+	cps = node.current_phases
+	res!(cps, θ, x, residual)
 	residual ./= std_noise
 	return sum(abs2, residual)
 end
 
 function regularizer(θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
-	par = @. θ - mean_Θ / std_θ
+	par = @. (θ - mean_θ) / std_θ
 	sum(abs2, par)
 end
 
 function negative_log_marginal_likelihood(Σ⁻¹, y)
 	d = length(y)
-	logdet(Σ⁻¹) + d/2 * log(dot(y, Σ⁻¹, y)) # + constant
+	try
+		logdet(Σ⁻¹)
+	catch DomainError
+		println("Σ⁻¹ is not spd..")
+		return 10000
+	end
+	return logdet(Σ⁻¹) + d/2 * log(dot(y, Σ⁻¹, y)) # + constant
 end
 
 marginal_likelihood(x...) = exp(-negative_log_marginal_likelihood(x...))
