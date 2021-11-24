@@ -9,14 +9,14 @@ include("../src/CrystalTree.jl")
 # include("../src/probabilistic.jl")
 
 std_noise = .5
-mean_θ = [1., 1., .2]
-std_θ = [.2, 10., 1.]
+mean_θ = [1.,.2]
+std_θ = [.2,  1.]
 
 # CrystalPhas object creation
 path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\n") # Windows: #\r\n ...
+s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)
@@ -45,16 +45,17 @@ num_nodes = find_first_unassigned(result) -1
 θ = get_parameters(result[17].current_phases)
 sos_objective(result[17], θ, x, test_y, std_noise)
 full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[17].current_phases)
-regularizer(θ, full_mean_θ, full_std_θ)
+regularizer(result[17], θ, full_mean_θ, full_std_θ)
 
 hessian_of_objective(result[17], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
 
 prob = Float64[]
-@threads for i in tqdm(1:num_nodes)
+for i in tqdm(1:num_nodes)
     θ = get_parameters(result[i].current_phases)
     # println("θ: $(θ)")
     # println(result[i].current_phases)
     test_y = convert(Vector{Real}, y)
-    full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].current_phases)
+    orig = [p.origin_cl for p in result[i].current_phases]
+    full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
     push!(prob, log_marginal_likelihood(result[i], θ, x, test_y, std_noise, full_mean_θ, full_std_θ))
 end
