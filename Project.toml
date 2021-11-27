@@ -6,6 +6,7 @@ version = "0.1.0"
 [deps]
 BackgroundSubtraction = "9977cdcb-3521-4027-9f3f-3caff6505f42"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 CompressedSensing = "adc28fdd-7b77-41a2-89a7-a1a193b336a0"
 CovarianceFunctions = "b3329135-7958-41d4-bb02-e084c5a526bf"

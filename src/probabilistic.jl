@@ -45,11 +45,12 @@ function negative_log_marginal_likelihood(Σ⁻¹, y)
 	d = length(y)
 	try
 		logdet(Σ⁻¹)
+		log(dot(y, Σ⁻¹, y))
 	catch DomainError
 		println("Σ⁻¹ is not spd..")
 		return 10000
 	end
-	return logdet(Σ⁻¹) #+ d/2 * log(dot(y, Σ⁻¹, y)) # + constant
+	return logdet(Σ⁻¹)/d# + d/2 * log(dot(y, Σ⁻¹, y)) # + constant
 end
 
 marginal_likelihood(x...) = exp(-negative_log_marginal_likelihood(x...))
