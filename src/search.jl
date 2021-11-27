@@ -2,7 +2,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     y::AbstractVector, std_noise::Real, mean::AbstractVector,
     std::AbstractVector, maxiter=32, regularization::Bool=true,
     prunable::Function=(p, x, y, t)->false, tol::Real=1e-3)
-    
+
     resulting_nodes = Node[]
     node_order = traversal_func(t)
     for level in 1:t.depth
@@ -52,27 +52,27 @@ end
 bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::Int)
 
 """
-function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, 
+function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                          max_search::Int; maxiter::Int=32, regularization::Bool=false)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
-    println("searched_node is initiated to have size $(size(searched_node, 1))")
+    # println("searched_node is initiated to have size $(size(searched_node, 1))")
     for level in 1:tree.depth
-        println("Working on level $(level)")
+        # println("Working on level $(level)")
         if level != 1
-            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r) 
+            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r)
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
-        end    
-        
+        end
+
         num_search = min(max_search, size(ranked_nodes, 1))
-        println("num of search = $(num_search)")
-        
+        # println("num of search = $(num_search)")
+
         @threads for i in 1:num_search
-            phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
+            phases = optimize!(ranked_nodes[i].current_phases, x, r, std_noise,
                   mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
-            inner = cos_angle(recon, y)
+            inner = cos_angle(recon, r)
             new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
             ranked_nodes[i] = new_node
         end
@@ -81,21 +81,21 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
     searched_node
 end
 
-function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, 
+function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                 std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                 max_search::AbstractArray; maxiter::Int=32, regularization::Bool=false)
     searched_node = Vector{Node}(undef, sum(max_search))
-    println("searched_node is initiated to have size $(size(searched_node, 1))")
+    # println("searched_node is initiated to have size $(size(searched_node, 1))")
     for level in 1:tree.depth
-        println("Working on level $(level)")
+        # println("Working on level $(level)")
         if level != 1
-            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r) 
+            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r)
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
-        end    
+        end
 
         num_search = min(max_search[level], size(ranked_nodes, 1))
-        println("num of search = $(num_search)")
+        # println("num of search = $(num_search)")
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
@@ -124,12 +124,12 @@ function rank_nodes_at_level(tree::Tree, level::Int,
     return nodes[order]
 end
 
-""" 
+"""
 Take a tree and an array node, return the estimated inner product
 of the node using the first level node.
-(This is a temperal solution, could use the immidiate parent node 
+(This is a temperal solution, could use the immidiate parent node
 and a first level node to do the estimate but again has to take into
-the account that the parant node may not have been optimized. Search 
+the account that the parant node may not have been optimized. Search
 along the path within the tree is more desired...
 """
 function matching_pursuit(tree::Tree, nodes::AbstractVector{<:Node},
@@ -153,7 +153,7 @@ function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
     return cos_angle(recon_sum, y)
 end
 
-function find_ref_nodes(candidate_nodes::AbstractVector{<:Node}, 
+function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
                         phase_ids::AbstractVector)
     node_indices = Vector{Int}()
     last_index = find_first_unassigned(candidate_nodes)-1
@@ -169,7 +169,7 @@ function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
     candidate_nodes[node_indices]
 end
 
-function find_ref_nodes(candidate_nodes::AbstractVector{<:Node}, 
+function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
                         node::Node)
     phase_ids = [p.id for p in node.current_phases]
     find_ref_nodes(candidate_nodes, phase_ids)
@@ -189,18 +189,18 @@ end
 function get_path_node(tree::Tree, ids::AbstractVector)
     path_nodes = Vector{Node}(undef, size(ids, 1))
     current_node = tree[1]
-    
+
     for i in eachindex(ids)
         current_node = find_child_w_id(current_node, ids[i])
         path_nodes[i] = current_node
     end
-    
+
     return path_nodes
 end
 
 function find_child_w_id(node::Node, id::Int)
     ids = union(get_phase_ids(node), [id])
-    
+
     for n in node.child_node
         if ids == get_phase_ids(n)
             return n
@@ -230,4 +230,78 @@ function estimate_recon_sum(path_nodes::AbstractVector{Node},
         end
     end
     return recon_sum
+end
+
+function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
+				  	   y::AbstractVector, std_noise::RealOrVec)
+	residual = copy(y)
+	cps = node.current_phases
+	res!(cps, θ, x, residual)
+	residual ./= std_noise
+	return sum(abs2, residual)
+end
+
+function regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
+    θ_c = remove_act_from_θ(θ, node.current_phases)
+	par = @. (θ_c - mean_θ) / std_θ
+	sum(abs2, par)
+end
+
+# θ = get_parameters(result[i].current_phases)
+# # println("θ: $(θ)")
+# # println(result[i].current_phases)
+# test_y = convert(Vector{Real}, y)
+# orig = [p.origin_cl for p in result[i].current_phases]
+# full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
+
+function total_loss(node::Node, θ::AbstractVector, x::AbstractVector,
+				  	   y::AbstractVector, std_noise::RealOrVec,  mean_θ::RealOrVec, std_θ::RealOrVec)
+    sos_objective(node, θ, x, y, std_noise) + regularizer(node, θ, mean_θ, std_θ)
+end
+
+function evaluate_result(nodes::AbstractVector{<:Node},
+                          x::AbstractVector, y::AbstractVector,
+                          threshold::Float64)
+    res_nodes = leveled_residual(nodes, x, y)
+    evaluate_phase_numbers(res_nodes, x, y, threshold)
+end
+
+function leveled_residual(nodes::AbstractVector{<:Node},
+                          x::AbstractVector, y::AbstractVector)
+    residuals = [norm(node.recon - y) for node in nodes]
+
+    #residuals = [total_loss(node.recon - y) for node in nodes]
+    level = [size(node.current_phases, 1) for node in nodes]
+    depth = length(Set(level))
+
+    minimum_node_idx = Int64[]
+
+    for d in 1:depth
+        idx = 1
+        min = typemax(Float64)
+        for i in eachindex(residuals)
+            if level[i] == d && residuals[i] < min
+                idx = i
+                min = residuals[i]
+            end
+        end
+        push!(minimum_node_idx, idx)
+    end
+
+    nodes[minimum_node_idx]
+end
+
+function evaluate_phase_numbers(nodes::AbstractVector{<:Node},
+                                x::AbstractVector, y::AbstractVector,
+                                threshold::Float64)
+    res = typemax(Float64)
+    for (level, node) in enumerate(nodes)
+        # println(level)
+        if res - norm(node.recon - y) > threshold
+            res = norm(node.recon - y)
+        else
+            return nodes[level-1]
+        end
+    end
+    return nodes[end]
 end

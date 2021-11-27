@@ -25,6 +25,7 @@ function Node(CPs::AbstractVector{<:CrystalPhase},
     Node(CPs, child_nodes, recon, cos_angle(y, recon))
 end
 
+(node::Node)(x::AbstractVector) = node.current_phases.(x)
 
 function Base.show(io::IO, node::Node)
     println("Phases:")

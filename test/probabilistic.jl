@@ -42,12 +42,15 @@ println("done")
 test_y = convert(Vector{Real}, y)
 num_nodes = find_first_unassigned(result) -1
 
-θ = get_parameters(result[17].current_phases)
-sos_objective(result[17], θ, x, test_y, std_noise)
-full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[17].current_phases)
-regularizer(result[17], θ, full_mean_θ, full_std_θ)
+residual_arr = Float64[]
+# for i in 1:num_nodes
+#     θ = get_parameters(result[i].current_phases)
+#     full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].current_phases)
+#
+#     push!(residual_arr, sos_objective(result[i], θ, x, test_y, std_noise) + regularizer(result[i], θ, full_mean_θ, full_std_θ))
+# end
 
-hessian_of_objective(result[17], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
+#sig = hessian_of_objective(result[17], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
 
 prob = Float64[]
 for i in tqdm(1:num_nodes)

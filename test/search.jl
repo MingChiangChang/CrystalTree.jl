@@ -30,7 +30,12 @@ y = zero(x)
     node.current_phases(x, y)
 end
 
-@btime result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 40,
+y ./= maximum(y)
+
+result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 40,
                         maxiter=16, regularization=true) # should return a bunch of node
 
-print("done")
+num_nodes = find_first_unassigned(result) - 1
+
+
+println(evaluate_result(result[1:num_nodes], x, y, 0.1))
