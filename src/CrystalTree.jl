@@ -3,6 +3,7 @@ using CrystalShift: CrystalPhase, optimize!
 using PhaseMapping: Phase
 
 export Node, Tree
+const RealOrVec = Union{Real, AbstractVector{<:Real}}
 
 include("util.jl")
 include("node.jl")

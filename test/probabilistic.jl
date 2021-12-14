@@ -1,5 +1,6 @@
 using Test
-using CrystalShift: CrystalPhase, optimize!, get_free_params
+using CrystalShift: CrystalPhase, optimize!, get_free_params, get_parameters
+using CrystalShift:  extend_priors
 using BenchmarkTools
 using ProgressBars
 
@@ -16,7 +17,7 @@ std_θ = [.2,  1.]
 path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
+s = split(read(f, String), "#\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)
@@ -32,7 +33,7 @@ y = zero(x)
     node.current_phases(x, y)
 end
 
-y /= maximum(y)
+# y /= maximum(y)
 
 result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
                         maxiter=32, regularization=true) # should return a bunch of node
