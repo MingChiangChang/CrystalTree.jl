@@ -32,13 +32,20 @@ function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 	residual = copy(y)
 	cps = node.current_phases
 	res!(cps, θ, x, residual)
-	residual ./= std_noise
+	residual ./= sqrt(2) * std_noise
 	return sum(abs2, residual)
 end
 
 function regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
     θ_c = remove_act_from_θ(θ, node.current_phases)
-	par = @. (θ_c - mean_θ) / std_θ
+	par = @. (θ_c - mean_θ) / (sqrt(2) * std_θ)
+	sum(abs2, par)
+end
+
+# regularizer in log space
+function log_regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
+    θ_c = remove_act_from_θ(θ, node.current_phases)
+	par = @. (log(θ_c) - log(mean_θ)) / (sqrt(2) * std_θ)
 	sum(abs2, par)
 end
 
