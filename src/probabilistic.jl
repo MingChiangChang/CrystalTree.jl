@@ -1,4 +1,4 @@
-#RealOrVec = Union{Real, AbstractVector{<:Real}}
+#const RealOrVec = Union{Real, AbstractVector{<:Real}}
 # computes log marginal likelihood of θ given (x, y) based on the Laplace approximation
 # NOTE: the input θ should be the local minimum with respect to θ
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ
@@ -12,6 +12,7 @@ function log_marginal_likelihood(node::Node, θ::AbstractVector, x::AbstractVect
 end
 
 using ForwardDiff
+using CrystalShift: res!, remove_act_from_θ
 # computes Hessian of objective function - including regularzation - w.r.t. θ
 # useful for Laplace approximation
 # NOTE: if we want to use a separate std_noise for each q value, need to
@@ -50,7 +51,7 @@ function negative_log_marginal_likelihood(Σ⁻¹, y)
 		println("Σ⁻¹ is not spd..")
 		return 10000
 	end
-	return logdet(Σ⁻¹)/d# + d/2 * log(dot(y, Σ⁻¹, y)) # + constant
+	return logdet(Σ⁻¹) + d/2 * log(dot(y, Σ⁻¹, y)) # + constant
 end
 
 marginal_likelihood(x...) = exp(-negative_log_marginal_likelihood(x...))
