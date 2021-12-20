@@ -3,6 +3,7 @@ using CrystalShift: CrystalPhase, optimize!, get_free_params, get_parameters
 using CrystalShift:  extend_priors
 using BenchmarkTools
 using ProgressBars
+using Plots
 
 include("../src/CrystalTree.jl")
 # include("../src/tree.jl")
@@ -33,13 +34,13 @@ y = zero(x)
     node.current_phases(x, y)
 end
 
-# y /= maximum(y)
+y /= maximum(y)
 
 result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
-                        maxiter=32, regularization=true) # should return a bunch of node
+                        maxiter=1000, regularization=true) # should return a bunch of node
 
 println("done")
-
+println(typeof(y))
 test_y = convert(Vector{Real}, y)
 num_nodes = find_first_unassigned(result) -1
 
@@ -54,11 +55,20 @@ residual_arr = Float64[]
 #sig = hessian_of_objective(result[17], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
 
 prob = Float64[]
-for i in tqdm(1:num_nodes)
+ree = copy(test_y)
+for i in 1:num_nodes
+    ree .= test_y
+    println("Phase $(i)")
+    θ = get_parameters(result[i].current_phases)
+    res!(result[i].current_phases, θ, x, ree)
+    ree ./= sqrt(2) * std_noise
+    println("Optimize error: $(sum(abs2, ree))")
+    plt = plot(x, test_y)
+    plot!(x, reconstruct!(result[i].current_phases, θ, x))
+    display(plt)
     θ = get_parameters(result[i].current_phases)
     # println("θ: $(θ)")
     # println(result[i].current_phases)
-    test_y = convert(Vector{Real}, y)
     orig = [p.origin_cl for p in result[i].current_phases]
     full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
     push!(prob, log_marginal_likelihood(result[i], θ, x, test_y, std_noise, full_mean_θ, full_std_θ))
