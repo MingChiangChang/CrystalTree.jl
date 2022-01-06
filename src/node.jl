@@ -29,6 +29,9 @@ end
 
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
 
+Base.getindex(n::Node, i::Int) = Base.getindex(n.current_phases, i)
+Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]
+
 function Base.show(io::IO, node::Node)
     println("Phases:")
 	for phase in node.current_phases
