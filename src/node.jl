@@ -107,6 +107,14 @@ function get_node_with_id(nodes::AbstractVector, ids::AbstractVector)
 	return @view nodes[indices]
 end
 
+function get_node_with_exact_ids(nodes::AbstractVector, ids::AbstractVector)
+    for i in eachindex(nodes)
+		if get_phase_ids(nodes[i]) == ids
+            return i, @view nodes[i]
+		end
+	end
+end
+
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
 
 function fit!(node::Node, x::AbstractVector, y::AbstractVector,
