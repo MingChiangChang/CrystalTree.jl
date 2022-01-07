@@ -8,17 +8,20 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     for level in 1:t.depth
         nodes = get_nodes_at_level(node_order, level)
         deleting = Set()
+
         @threads for node in nodes
             phases = optimize!(node.current_phases, x, y, std_noise,
                   mean, std, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             node = Node(node.current_phases, node.child_node, recon, cos_angle(recon, y))
             push!(resulting_nodes, node)
+
             if level<t.depth && prunable(phases, x, y, tol)
                 println("Pruning...")
                 push!(deleting, get_child_node_indicies(node, node_order)...)
             end
         end
+
         node_order = @view node_order[filter!(x->x ∉ deleting, collect(1:size(node_order, 1)))]
         println(size(node_order, 1))
     end
@@ -27,14 +30,16 @@ end
 
 
 function search!(t::Tree, traversal_func::Function, x::AbstractVector,
-    y::AbstractVector, std_noise::Real, mean::AbstractVector,
-    std::AbstractVector, maxiter=32, regularization::Bool=true,
-    tol::Real=1e-3)
+                y::AbstractVector, std_noise::Real, mean::AbstractVector,
+                std::AbstractVector, maxiter=32, regularization::Bool=true,
+                tol::Real=1e-3)
     node_order = traversal_func(t)
+
     @threads for node in node_order
         @time optimize!(node.current_phases, x, y, std_noise, mean, std,
                         maxiter=maxiter, regularization=regularization)
     end
+    
 end
 
 function pos_res_thresholding(phases::AbstractVector{<:PhaseTypes},
@@ -212,6 +217,7 @@ function estimate_recon_sum(path_nodes::AbstractVector{Node},
                             first_level_nodes::AbstractVector{Node},
                             ids::AbstractVector)
     recon_sum = zeros(size(path_nodes[1].inner, 1))
+
     for i in reverse(eachindex(path_nodes))
         if isempty(ids)
             return recon_sum
@@ -223,12 +229,14 @@ function estimate_recon_sum(path_nodes::AbstractVector{Node},
             filter!(x->x ∉ node_ids, ids)
         end
     end
+
     if !isempty(ids)
-        nodes = get_node_with_id(ids)
+        nodes = get_node_with_id(path_nodes, ids)
         for n in nodes
             recon_sum .+= n.recon
         end
     end
+
     return recon_sum
 end
 
