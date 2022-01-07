@@ -25,6 +25,7 @@ function hessian_of_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 	end
 	println("final sos: $(sos_objective(node, θ, x, y, std_noise))")
 	println("final prior: $(log_regularizer(node, θ, mean_θ, std_θ))")
+	println("final onjective: $(f(θ))")
 	println("Diff norm: $(ForwardDiff.gradient(f, θ))")
 	ForwardDiff.hessian(f, θ)
 end

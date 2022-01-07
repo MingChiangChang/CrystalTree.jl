@@ -36,7 +36,7 @@ end
 
 y /= maximum(y)
 
-result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
+result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 15,
                         maxiter=1000, regularization=true) # should return a bunch of node
 
 println("done")
