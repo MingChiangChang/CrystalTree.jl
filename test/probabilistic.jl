@@ -5,20 +5,20 @@ using BenchmarkTools
 using ProgressBars
 using Plots
 
-include("../src/CrystalTree.jl")
+# include("../src/CrystalTree.jl")
 # include("../src/tree.jl")
 # include("../src/search.jl")
 # include("../src/probabilistic.jl")
 
 std_noise = .5
-mean_θ = [1.,.2]
-std_θ = [.2,  1.]
+mean_θ = [1., 1., .2]
+std_θ = [.2,  Inf, 1.]
 
 # CrystalPhas object creation
 path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\n") # Windows: #\r\n ...
+s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)
