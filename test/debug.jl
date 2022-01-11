@@ -5,19 +5,19 @@ using BenchmarkTools
 using ProgressBars
 using Plots
 
-include("../src/CrystalTree.jl")
+# include("../src/CrystalTree.jl")
 # include("../src/tree.jl")
 # include("../src/search.jl")
 # include("../src/probabilistic.jl")
 
 std_noise = .5
-mean_θ = [1.,.2]
-std_θ = [.2,  1.]
+mean_θ = [1., 1., .2]
+std_θ = [.2,  Inf, 1.]
 
 path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\n") # Windows: #\r\n ...
+s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)
@@ -48,14 +48,14 @@ test_y = convert(Vector{Real}, y)
 hessian_of_objective(n[1], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
 log_marginal_likelihood(n[1], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
 
-idx, n2 = get_node_with_exact_ids(tree.nodes, [0])
+# idx, n2 = get_node_with_exact_ids(tree.nodes, [0])
 
-result2 = optimize!(n2[1].current_phases, x, y, std_noise,
-          mean_θ, std_θ, maxiter=1000, regularization=true)
+# result2 = optimize!(n2[1].current_phases, x, y, std_noise,
+#           mean_θ, std_θ, maxiter=1000, regularization=true)
 
-orig = [p.origin_cl for p in n2[1].current_phases]
-θ = get_parameters(n2[1].current_phases)
-full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
-test_y = convert(Vector{Real}, y)
-hessian_of_objective(n2[1], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
-log_marginal_likelihood(n2[1], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
+# orig = [p.origin_cl for p in n2[1].current_phases]
+# θ = get_parameters(n2[1].current_phases)
+# full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
+# test_y = convert(Vector{Real}, y)
+# hessian_of_objective(n2[1], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
+# log_marginal_likelihood(n2[1], θ, x, test_y, std_noise, full_mean_θ, full_std_θ)
