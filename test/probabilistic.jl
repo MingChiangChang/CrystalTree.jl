@@ -18,7 +18,7 @@ std_θ = [.2,  Inf, 1.]
 path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
+s = split(read(f, String), "#\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)
