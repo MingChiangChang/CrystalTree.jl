@@ -1,5 +1,6 @@
 module CrystalTree
-using CrystalShift: CrystalPhase, optimize!
+using ForwardDiff
+using CrystalShift: CrystalPhase, optimize!, _residual!, _prior
 using PhaseMapping: Phase
 
 const RealOrVec = Union{Real, AbstractVector{<:Real}}
