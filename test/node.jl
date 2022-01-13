@@ -1,15 +1,20 @@
+using CrystalTree: Node, add_child!, get_nodes_at_level
+using CrystalTree: is_immidiate_child, is_child, get_level
+using CrystalTree: get_phase_ids
 using PhaseMapping: readsticks
 using CrystalShift: CrystalPhase
 using Test
-
-include("../src/node.jl")
-include("../src/tree.jl")
 
 # CrystalPhase object creation
 path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\n") # Windows: #\r\n ...
+
+if Sys.iswindows()
+    s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
+else
+    s = split(read(f, String), "#\n")
+end
 
 if s[end] == ""
     pop!(s)

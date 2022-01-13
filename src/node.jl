@@ -4,19 +4,21 @@
 PhaseTypes = Union{Phase, CrystalPhase}
 abstract type AbstractNode end
 
-struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector, R<:AbstractVector, I<:Real} <: AbstractNode
+struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector,
+	        R<:AbstractVector, K<:AbstractVector, I<:Real} <: AbstractNode
 	current_phases::CP
 	child_node::CN
 
 	recon::R
+	residual::K
 	inner::I
 end
 
-Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], Float64[], 0.) # Root
-Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[], Float64[], 0.)
-Node(phase::Phase) = Node([phase], Node{<:Phase}[], Float64[], 0.)
-Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[], Float64[], 0.)
-Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Float64[], 0.)
+Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], Float64[], Float64[], 0.) # Root
+Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[], Float64[], Float64[], 0.)
+Node(phase::Phase) = Node([phase], Node{<:Phase}[], Float64[], Float64[], 0.)
+Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[], Float64[], Float64[], 0.)
+Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Float64[], Float64[], 0.)
 
 function Node(CPs::AbstractVector{<:CrystalPhase},
 	          child_nodes::AbstractVector,

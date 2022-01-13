@@ -2,6 +2,7 @@ module CrystalTree
 using CrystalShift: CrystalPhase, optimize!
 using PhaseMapping: Phase
 
+export Node, Tree
 
 include("util.jl")
 include("node.jl")
