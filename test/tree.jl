@@ -1,24 +1,27 @@
 # using Plots
+module Testtree
+using CrystalTree
+using CrystalTree: search!, bft, pos_res_thresholding
 using DelimitedFiles
 using Test
-using Plots
 
 using PhaseMapping: Lorentz
 using CrystalShift: CrystalPhase, optimize!
-
-include("../src/node.jl")
-include("../src/tree.jl")
-include("../src/search.jl")
 
 std_noise = .01
 mean_θ = [1., 1., .2]
 std_θ = [.5, 10., 1.]
 
 # CrystalPhas object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
-s = split(read(f, String), "#\n") # Windows: #\r\n ...
+
+if Sys.iswindows()
+    s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
+else
+    s = split(read(f, String), "#\n")
+end
 
 if s[end] == ""
     pop!(s)
@@ -52,5 +55,5 @@ residual = Float64[]
 ind = argmin([norm(i(x)-y) for i in res])
 
 r =  res[ind](x)
-plot(x, r, label="Reconstructed")
-plot!(x, y, label="Answer")
+
+end # module

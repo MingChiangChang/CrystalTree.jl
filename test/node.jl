@@ -1,3 +1,4 @@
+module Testnode
 using CrystalTree: Node, add_child!, get_nodes_at_level
 using CrystalTree: is_immidiate_child, is_child, get_level
 using CrystalTree: get_phase_ids
@@ -6,7 +7,7 @@ using CrystalShift: CrystalPhase
 using Test
 
 # CrystalPhase object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -50,3 +51,5 @@ fake_tree = [root, node1, node2, node3, node4]
     @test get_phase_ids(node4) == [0, 1, 2]
     @test get_nodes_at_level(fake_tree, 3) == [node4]
 end
+
+end # module

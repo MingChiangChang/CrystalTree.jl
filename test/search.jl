@@ -1,3 +1,5 @@
+module Testsearch
+using CrystalTree
 using Test
 using CrystalShift: CrystalPhase, optimize!
 using BenchmarkTools
@@ -39,3 +41,5 @@ end
                         maxiter=16, regularization=true) # should return a bunch of node
 
 print("done")
+
+end # module
