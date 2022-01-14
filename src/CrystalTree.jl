@@ -3,6 +3,7 @@ using ForwardDiff
 using CrystalShift: CrystalPhase, optimize!, _residual!, _prior
 using PhaseMapping: Phase
 
+export Tree, Node
 const RealOrVec = Union{Real, AbstractVector{<:Real}}
 
 include("util.jl")
