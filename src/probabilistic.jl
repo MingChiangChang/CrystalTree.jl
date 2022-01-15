@@ -22,7 +22,7 @@ function hessian_of_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 	function f(θ)
 		sos_objective(node, θ, x, y, std_noise) + regularizer(θ, mean_θ, std_θ)
 	end
-	
+
 	ForwardDiff.hessian(f, θ)
 end
 
@@ -62,21 +62,19 @@ function log_regularizer(log_θ::AbstractVector, mean_θ::RealOrVec, std_θ::Rea
 	sum(abs2, _prior(p, log_θ, mean_θ, std_θ))
 end
 
-function hessian_of_kl_objective(phases::AbstractVector, log_θ::AbstractVector, 
-	                             x::AbstractVector, y::AbstractVector, 
-								 mean_θ::AbstractVector, std_θ::AbstractVector)
+function hessian_of_kl_objective(phases::AbstractVector, log_θ::AbstractVector,
+	                             x::AbstractVector, y::AbstractVector,
+								 mean_θ::AbstractVector, std_θ::AbstractVector, λ::Real = 0)
     μ = log.(mean_θ)
 	function f(log_θ)
-		newton_objective(phases, log_θ, x, y, μ, std_θ)
+		newton_objective(phases, log_θ, x, y, μ, std_θ, λ)
 	end
-
 	ForwardDiff.hessian(f, log_θ)
 end
 
 function newton_objective(phases::AbstractVector, log_θ::AbstractVector,
-	                      x::AbstractVector, y::AbstractVector, 
-						  μ::AbstractVector, std_θ::AbstractVector)
-	λ = 0
+	                      x::AbstractVector, y::AbstractVector,
+						  μ::AbstractVector, std_θ::AbstractVector, λ::Real)
 	θ = exp.(log_θ)
 	r_θ = reconstruct!(phases, θ, x) # reconstruction of phases, IDEA: pre-allocate result (one for Dual, one for Float)
 	r_θ ./= exp(1) # since we are not normalizing the inputs, this rescaling has the effect that kl(α*y, y) has the optimum at α = 1
@@ -93,7 +91,7 @@ end
 
 function negative_log_marginal_likelihood(Σ⁻¹, y)
 	d = length(y)
-	return d/2 * log(dot(y, Σ⁻¹, y)) + logdet(Σ⁻¹) # +  + constant x  +
+	return 1/2 * (dot(y, Σ⁻¹, y) + logdet(Σ⁻¹) + d * log(2π))
 end
 
 marginal_likelihood(x...) = exp(-negative_log_marginal_likelihood(x...))
