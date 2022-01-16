@@ -46,6 +46,10 @@ Base.size(t::Tree, dim::Int) = size(t.nodes, dim)
 Base.getindex(t::Tree, i::Int) = Base.getindex(t.nodes, i)
 Base.getindex(t::Tree, I::Vector{Int}) = [t[i] for i in I]
 
+get_nodes_at_level(tree::Tree, level::Int) = get_nodes_at_level(tree.nodes, level)
+get_node_with_id(tree::Tree, id::Int) = get_node_with_id(tree.nodes, id)
+get_node_with_id(tree::Tree, ids::AbstractVector{<:Int}) = get_node_with_id(tree.nodes, ids)
+
 function bft(t::Tree)
     # Breadth-first traversal, return an array of
 	# Node with the b-f order

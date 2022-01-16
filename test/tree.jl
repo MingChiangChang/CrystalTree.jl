@@ -3,6 +3,7 @@ module Testtree
 using CrystalTree
 using CrystalTree: search!, bft, pos_res_thresholding
 using DelimitedFiles
+using LinearAlgebra
 using Test
 
 using PhaseMapping: Lorentz

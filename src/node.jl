@@ -29,6 +29,7 @@ function Node(CPs::AbstractVector{<:CrystalPhase},
     Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
 
+
 function Base.show(io::IO, node::Node)
 	println("Node ID: $(node.id)")
     println("Phases:")
@@ -113,9 +114,6 @@ function get_node_with_id(nodes::AbstractVector, ids::AbstractVector{<:Int})
 	return @view nodes[indices]
 end
 
-get_nodes_at_level(tree::Tree, level::Int) = get_nodes_at_level(tree.nodes, level)
-get_node_with_id(tree::Tree, id::Int) = get_node_with_id(tree.nodes, id)
-get_node_with_id(tree::Tree, ids::AbstractVector{<:Int}) = get_node_with_id(tree.nodes, ids)
 
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
 cos_angle(node::Node, x::AbstractVector) = cos_angle(node(x), x)
