@@ -10,9 +10,9 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         deleting = Set()
         @threads for node in nodes
             phases = optimize!(node.current_phases, x, y, std_noise,
-                  mean, std, maxiter=maxiter, regularization=regularization)
+                  mean, std, method=LM, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
-            node = Node(node.current_phases, node.child_node, recon, cos_angle(recon, y))
+            node = Node(node.current_phases, node.child_node, recon, y.-recon, cos_angle(recon, y))
             push!(resulting_nodes, node)
             if level<t.depth && prunable(phases, x, y, tol)
                 println("Pruning...")
@@ -37,7 +37,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     end
 end
 
-function pos_res_thresholding(phases::AbstractVector{<:PhaseTypes},
+function pos_res_thresholding(phases::AbstractVector{<:CrystalPhase},
     x::AbstractVector, y::AbstractVector, tol::Real)
     # Only count extra peaks that showed up in reconstruction
     recon = zero(x)
@@ -70,10 +70,10 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
-                  mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
+                  mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             inner = cos_angle(recon, y)
-            new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
+            new_node = Node(phases, ranked_nodes[i].child_node, recon, y.-recon,  inner)
             ranked_nodes[i] = new_node
         end
         record_node!(searched_node, ranked_nodes[1:num_search])
