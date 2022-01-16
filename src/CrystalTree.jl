@@ -1,4 +1,5 @@
 module CrystalTree
+using CrystalShift
 using CrystalShift: CrystalPhase, optimize!
 using PhaseMapping: Phase
 

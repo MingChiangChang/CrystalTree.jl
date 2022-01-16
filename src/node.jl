@@ -9,32 +9,40 @@ struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector,
 	current_phases::CP
 	child_node::CN
 
+	id::Int
 	recon::R
 	residual::K
 	inner::I
+	is_optimized::Bool
 end
 
-Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], Float64[], Float64[], 0.) # Root
-Node(phases::AbstractVector{<:Phase}) = Node(phases, Node{<:Phase}[], Float64[], Float64[], 0.)
-Node(phase::Phase) = Node([phase], Node{<:Phase}[], Float64[], Float64[], 0.)
-Node(CP::CrystalPhase) = Node([CP], Node{<:CrystalPhase}[], Float64[], Float64[], 0.)
-Node(CPs::AbstractVector{<:CrystalPhase}) = Node(CPs, Node{<:CrystalPhase}[], Float64[], Float64[], 0.)
+Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], 1, Float64[], Float64[], 0., false) # Root
+Node(phases::AbstractVector{<:Phase}, id::Int) = Node(phases, Node{<:Phase}[], id, Float64[], Float64[], 0., false)
+Node(phase::Phase, id::Int) = Node([phase], Node{<:Phase}[], id, Float64[], Float64[], 0., false)
+Node(CP::CrystalPhase, id::Int) = Node([CP], Node{<:CrystalPhase}[], id, Float64[], Float64[], 0., false)
+Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(CPs, Node{<:CrystalPhase}[], id, Float64[], Float64[], 0., false)
 
 function Node(CPs::AbstractVector{<:CrystalPhase},
 	          child_nodes::AbstractVector,
-			  x::AbstractVector, y::AbstractVector) 
+			  x::AbstractVector, y::AbstractVector, id::Int) 
 	recon = CPs.(x)
-    Node(CPs, child_nodes, recon, cos_angle(y, recon))
+    Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
 
-
 function Base.show(io::IO, node::Node)
+	println("Node ID: $(node.id)")
     println("Phases:")
 	for phase in node.current_phases
 		println("    $(phase.name)")
 	end
 	println("Number of child nodes: $(size(node.child_node))")
 	println("Inner product: $(node.inner)")
+	if node.is_optimized
+	    println("Optimized: Yes")
+	else
+		println("Optimized: No")
+	end
+	println("")
 end
 
 function Base.:(==)(a::Node, b::Node)
@@ -77,7 +85,8 @@ end
 get_level(node::Node) = size(node.current_phases)[1]
 get_phase_ids(node::Node) = [p.id for p in node.current_phases]
 get_inner(nodes::AbstractVector{<:Node}) = [node.inner for node in nodes]
-
+get_child_ids(node::Node) = [node.child_node[i].id for i in eachindex(node.child_node)]
+get_ids(nodes::AbstractVector{<:Node}) = [node.id for node in nodes]
 # O(n) for now, can improve to O(1)
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
 	idx = [i for i in eachindex(nodes) if get_level(nodes[i])==level]
@@ -92,7 +101,8 @@ function get_node_with_id(nodes::AbstractVector, id::Int)
 	end
 end
 
-function get_node_with_id(nodes::AbstractVector, ids::AbstractVector)
+
+function get_node_with_id(nodes::AbstractVector, ids::AbstractVector{<:Int})
 	indices = Vector{Int}()
     for i in eachindex(nodes)
 		if get_phase_ids(nodes[i])[1] in ids
@@ -103,7 +113,12 @@ function get_node_with_id(nodes::AbstractVector, ids::AbstractVector)
 	return @view nodes[indices]
 end
 
+get_nodes_at_level(tree::Tree, level::Int) = get_nodes_at_level(tree.nodes, level)
+get_node_with_id(tree::Tree, id::Int) = get_node_with_id(tree.nodes, id)
+get_node_with_id(tree::Tree, ids::AbstractVector{<:Int}) = get_node_with_id(tree.nodes, ids)
+
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
+cos_angle(node::Node, x::AbstractVector) = cos_angle(node(x), x)
 
 function fit!(node::Node, x::AbstractVector, y::AbstractVector,
 	std_noise::Real, mean::AbstractVector, std::AbstractVector,
