@@ -22,6 +22,7 @@ if Sys.iswindows()
 else
     s = split(read(f, String), "#\n")
 end
+s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)
@@ -45,3 +46,4 @@ result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 40,
 print("done")
 
 end # module
+

@@ -57,7 +57,7 @@ end
 bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::Int)
 
 """
-function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
+function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                          max_search::Int; maxiter::Int=32, regularization::Bool=false)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
@@ -65,13 +65,13 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
     for level in 1:tree.depth
         # println("Working on level $(level)")
         if level != 1
-            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, y)
+            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r)
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
         end
 
         num_search = min(max_search, size(ranked_nodes, 1))
-        println("num of search = $(num_search)")
+        # println("num of search = $(num_search)")
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, r, std_noise,
