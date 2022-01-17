@@ -1,4 +1,3 @@
-#const RealOrVec = Union{Real, AbstractVector{<:Real}}
 # computes log marginal likelihood of θ given (x, y) based on the Laplace approximation
 # NOTE: the input θ should be the local minimum with respect to θ
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ

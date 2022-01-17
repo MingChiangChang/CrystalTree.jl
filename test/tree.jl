@@ -4,7 +4,7 @@ using CrystalTree
 using CrystalTree: search!, bft, pos_res_thresholding
 using DelimitedFiles
 using Test
-
+using LinearAlgebra
 using PhaseMapping: Lorentz
 using CrystalShift: CrystalPhase, optimize!
 

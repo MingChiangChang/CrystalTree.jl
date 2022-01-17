@@ -1,19 +1,17 @@
 module Testsearch
 using CrystalTree
+using CrystalTree: bestfirstsearch
 using Test
+using CrystalShift
 using CrystalShift: CrystalPhase, optimize!
-using BenchmarkTools
 
-include("../src/node.jl")
-include("../src/tree.jl")
-include("../src/search.jl")
 
 std_noise = .05
-mean_θ = [1., .2]
-std_θ = [.2, 1.]
+mean_θ = [1., 1e-4, .2]
+std_θ = [.2, 100, 1.]
 
 # CrystalPhas object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -22,7 +20,6 @@ if Sys.iswindows()
 else
     s = split(read(f, String), "#\n")
 end
-s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
 
 if s[end] == ""
     pop!(s)

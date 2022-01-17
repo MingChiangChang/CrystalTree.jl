@@ -1,10 +1,10 @@
 module CrystalTree
 using ForwardDiff
+using CrystalShift
 using CrystalShift: CrystalPhase, optimize!, _residual!, _prior
 using PhaseMapping: Phase
 
 export Node, Tree
-const RealOrVec = Union{Real, AbstractVector{<:Real}}
 
 include("util.jl")
 include("node.jl")

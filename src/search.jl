@@ -11,9 +11,9 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 
         @threads for node in nodes
             phases = optimize!(node.current_phases, x, y, std_noise,
-                  mean, std, maxiter=maxiter, regularization=regularization)
+                  mean, std, method=LM, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
-            node = Node(node.current_phases, node.child_node, recon, cos_angle(recon, y))
+            node = Node(node.current_phases, node.child_node, recon, y.-recon, cos_angle(recon, y))
             push!(resulting_nodes, node)
 
             if level<t.depth && prunable(phases, x, y, tol)
@@ -37,12 +37,12 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 
     @threads for node in node_order
         @time optimize!(node.current_phases, x, y, std_noise, mean, std,
-                        maxiter=maxiter, regularization=regularization)
+                        method=LM, maxiter=maxiter, regularization=regularization)
     end
     
 end
 
-function pos_res_thresholding(phases::AbstractVector{<:PhaseTypes},
+function pos_res_thresholding(phases::AbstractVector{<:CrystalPhase},
     x::AbstractVector, y::AbstractVector, tol::Real)
     # Only count extra peaks that showed up in reconstruction
     recon = zero(x)
@@ -57,7 +57,7 @@ end
 bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::Int)
 
 """
-function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
+function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                          max_search::Int; maxiter::Int=32, regularization::Bool=false)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
@@ -65,7 +65,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
     for level in 1:tree.depth
         # println("Working on level $(level)")
         if level != 1
-            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r)
+            ranked_nodes = rank_nodes_at_level(tree, level, searched_node, y)
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
         end
@@ -74,11 +74,11 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
         # println("num of search = $(num_search)")
 
         @threads for i in 1:num_search
-            phases = optimize!(ranked_nodes[i].current_phases, x, r, std_noise,
-                  mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
+            phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
+                  mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
-            inner = cos_angle(recon, r)
-            new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
+            inner = cos_angle(recon, y)
+            new_node = Node(phases, ranked_nodes[i].child_node, recon, y.-recon, inner)
             ranked_nodes[i] = new_node
         end
         record_node!(searched_node, ranked_nodes[1:num_search])
@@ -104,7 +104,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
-            mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
+            mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             inner = cos_angle(recon, y)
             new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
@@ -240,8 +240,10 @@ function estimate_recon_sum(path_nodes::AbstractVector{Node},
     return recon_sum
 end
 
+const RealOrVec = Union{Real, AbstractVector{<:Real}}
+
 function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
-				  	   y::AbstractVector, std_noise::RealOrVec)
+				  	   y::AbstractVector, std_noise::Real)
 	residual = copy(y)
 	cps = node.current_phases
 	res!(cps, θ, x, residual)
@@ -249,7 +251,7 @@ function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 	return sum(abs2, residual)
 end
 
-function regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
+function regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::Real)
     θ_c = remove_act_from_θ(θ, node.current_phases)
 	par = @. (θ_c - mean_θ) / std_θ
 	sum(abs2, par)
