@@ -1,7 +1,7 @@
 module CrystalTree
 using ForwardDiff
 using CrystalShift
-using CrystalShift: CrystalPhase, optimize!, _residual!, _prior
+using CrystalShift: CrystalPhase, optimize!, _residual!, _prior, kl
 using PhaseMapping: Phase
 
 export Node, Tree

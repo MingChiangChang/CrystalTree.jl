@@ -3,14 +3,21 @@
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ
 function log_marginal_likelihood(node::Node, θ::AbstractVector, x::AbstractVector,
 								 y::AbstractVector, std_noise::RealOrVec,
-								 mean_θ::RealOrVec, std_θ::RealOrVec)
+								 mean_θ::RealOrVec, std_θ::RealOrVec, objective::String)
 	log_θ = log.(θ)
-	H = hessian_of_objective_wrt_log(node, log_θ, x, y, std_noise, mean_θ, std_θ)
+
+	H = if objective == "LS"
+		hessian_of_objective_wrt_log(node, log_θ, x, y, std_noise, mean_θ, std_θ)
+	else objective = "KL"
+		hessian_of_kl_objective(node.current_phases, log_θ, x, y, mean_θ, std_θ)
+	end
+
 	# calculate marginal likelihood
 	Σ⁻¹ = H # reinterpret Hessian of minimization problem as inverse of covariance matrix
 	negative_log_marginal_likelihood(Σ⁻¹, log_θ) # TODO: do we need to scale by "height" of distribution?
 end
 
+using LinearAlgebra
 # computes Hessian of objective function - including regularzation - w.r.t. θ
 # useful for Laplace approximation
 # NOTE: if we want to use a separate std_noise for each q value, need to
@@ -42,11 +49,13 @@ end
 function hessian_of_objective_wrt_log(node::Node, log_θ::AbstractVector, x::AbstractVector,
 									  y::AbstractVector, std_noise::RealOrVec,
 									  mean_θ::RealOrVec, std_θ::RealOrVec)
-	function f(θ)
-		sos_log_objective(node, log_θ, x, y, std_noise) + log_regularizer(θ, mean_θ, std_θ)
+	function f(log_θ)
+		sos_log_objective(node, log_θ, x, y, std_noise) + log_regularizer(log_θ, mean_θ, std_θ)
 	end
-
-	ForwardDiff.hessian(f, log_θ)
+    # println("sos: $()")
+	H = ForwardDiff.hessian(f, log_θ)
+	# display(eigvals(H))
+	H
 end
 
 function sos_log_objective(node::Node, log_θ::AbstractVector, x::AbstractVector,
@@ -68,7 +77,9 @@ function hessian_of_kl_objective(phases::AbstractVector, log_θ::AbstractVector,
 	function f(log_θ)
 		newton_objective(phases, log_θ, x, y, μ, std_θ, λ)
 	end
-	ForwardDiff.hessian(f, log_θ)
+	H = ForwardDiff.hessian(f, log_θ)
+	# display(eigvals(H))
+	H
 end
 
 function newton_objective(phases::AbstractVector, log_θ::AbstractVector,
