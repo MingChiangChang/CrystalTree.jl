@@ -93,7 +93,7 @@ end
 function prior(log_θ::AbstractVector, μ::AbstractVector, std_θ::AbstractVector)
 	p = zero(eltype(log_θ))
 	@inbounds @simd for i in eachindex(log_θ)
-		p += (log_θ[i] - μ[i]) / (sqrt(2)*std_θ[i])
+		p += ((log_θ[i] - μ[i]) / (sqrt(2)*std_θ[i]))^2
 	end
 	return p
 end

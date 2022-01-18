@@ -53,6 +53,7 @@ println("Searching done!")
 num_nodes = find_first_unassigned(result) -1
 
 residual_norm = zeros(num_nodes)
+reconstruction = zeros(length(x), num_nodes)
 num_of_params = zeros(Int64, num_nodes)
 prob = zeros(num_nodes)
 for i in 1:num_nodes
@@ -61,7 +62,8 @@ for i in 1:num_nodes
     full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
     num_of_params[i] = length(θ)
     prob[i] = log_marginal_likelihood(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, "LS")
-    residual_norm[i] = norm(y - reconstruct!(result[i].current_phases, θ, x, zero(x)))
+    reconstruction[:, i] = reconstruct!(result[i].current_phases, θ, x, zero(x))
+    residual_norm[i] = norm(y - reconstruction[:, i])
 end
 
 # i_min = argmin(prob)
