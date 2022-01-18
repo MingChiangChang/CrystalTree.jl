@@ -110,8 +110,6 @@ function get_node_with_exact_ids(nodes::AbstractVector, ids::AbstractVector)
 	end
 end
 
-(node::Node)(x::AbstractVector) = node.current_phases.(x)
-
 function fit!(node::Node, x::AbstractVector, y::AbstractVector,
 	std_noise::Real, mean::AbstractVector, std::AbstractVector,
 	maxiter=32, regularization::Bool=true)

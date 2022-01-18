@@ -13,11 +13,10 @@ function log_marginal_likelihood(node::Node, θ::AbstractVector, x::AbstractVect
 	end
 
 	# calculate marginal likelihood
-	Σ⁻¹ = H # reinterpret Hessian of minimization problem as inverse of covariance matrix
-	negative_log_marginal_likelihood(Σ⁻¹, log_θ) # TODO: do we need to scale by "height" of distribution?
+	Σ = inverse(H) # reinterpret Hessian of minimization problem as inverse of covariance matrix
+	negative_log_marginal_likelihood(Σ, log_θ) # TODO: do we need to scale by "height" of distribution?
 end
 
-using LinearAlgebra
 # computes Hessian of objective function - including regularzation - w.r.t. θ
 # useful for Laplace approximation
 # NOTE: if we want to use a separate std_noise for each q value, need to
@@ -35,14 +34,14 @@ end
 # sos = sum of squares
 function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 	y::AbstractVector, std_noise::RealOrVec)
-	r = similar(y)
+	r = zeros(promote_type(eltype(θ), eltype(x), eltype(y)), length(x))
 	r = _residual!(node.current_phases, log.(θ), x, y, r, std_noise)
 	return sum(abs2, r)
 end
 
 # regularizer in log space
 function regularizer(θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
-	p = similar(θ)
+	p = zero(θ)
 	sum(abs2, _prior(p, log.(θ), mean_θ, std_θ))
 end
 
@@ -60,13 +59,13 @@ end
 
 function sos_log_objective(node::Node, log_θ::AbstractVector, x::AbstractVector,
 	                       y::AbstractVector, std_noise::RealOrVec)
-	r = similar(y)
+	r = zeros(promote_type(eltype(log_θ), eltype(x), eltype(y)), length(x))
 	r = _residual!(node.current_phases, log_θ, x, y, r, std_noise)
 	return sum(abs2, r)
 end
 
 function log_regularizer(log_θ::AbstractVector, mean_θ::RealOrVec, std_θ::RealOrVec)
-	p = similar(log_θ)
+	p = zero(log_θ)
 	sum(abs2, _prior(p, log_θ, mean_θ, std_θ))
 end
 
@@ -99,9 +98,9 @@ function prior(log_θ::AbstractVector, μ::AbstractVector, std_θ::AbstractVecto
 	return p
 end
 
-function negative_log_marginal_likelihood(Σ⁻¹, y)
+function negative_log_marginal_likelihood(Σ, y)
 	d = length(y)
-	return 1/2 * (dot(y, Σ⁻¹, y) + logdet(Σ⁻¹) + d * log(2π))
+	return 1/2 * (dot(y, inverse(Σ), y) + logdet(Σ) + d * log(2π))
 end
 
 marginal_likelihood(x...) = exp(-negative_log_marginal_likelihood(x...))

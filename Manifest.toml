@@ -103,9 +103,9 @@ version = "0.5.1"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "926870acb6cbcf029396f2f2de030282b6bc1941"
+git-tree-sha1 = "6e39c91fb4b84dcb870813c91674bdebb9145895"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.11.4"
+version = "1.11.5"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -201,7 +201,7 @@ version = "4.1.0"
 
 [[deps.CrystalShift]]
 deps = ["BackgroundSubtraction", "CSV", "DataFrames", "JSON", "LinearAlgebra", "NPZ", "OptimizationAlgorithms", "PhaseMapping", "ProgressBars", "Random", "Test", "TimerOutputs"]
-git-tree-sha1 = "7fe17d5d00ea210c0a98d775eef37ea728414f30"
+git-tree-sha1 = "6c43534f79a96374c435c1807c7ce2ce2f043f02"
 repo-rev = "newton"
 repo-url = "https://github.com/MingChiangChang/CrystalShift.jl"
 uuid = "bd08b025-496e-41a7-bb0b-8ec7e5300520"

@@ -1,7 +1,9 @@
+const DEFAULT_TOL = 1e-6
+
 function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     y::AbstractVector, std_noise::Real, mean::AbstractVector,
-    std::AbstractVector, maxiter=32, regularization::Bool=true,
-    prunable::Function=(p, x, y, t)->false, tol::Real=1e-3)
+    std::AbstractVector, prunable;
+    maxiter::Int = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
 
     resulting_nodes = Node[]
     node_order = traversal_func(t)
@@ -31,15 +33,15 @@ end
 
 function search!(t::Tree, traversal_func::Function, x::AbstractVector,
                 y::AbstractVector, std_noise::Real, mean::AbstractVector,
-                std::AbstractVector, maxiter=32, regularization::Bool=true,
-                tol::Real=1e-3)
+                std::AbstractVector;
+                maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
     node_order = traversal_func(t)
 
     @threads for node in node_order
         @time optimize!(node.current_phases, x, y, std_noise, mean, std,
                         method=LM, maxiter=maxiter, regularization=regularization)
     end
-    
+
 end
 
 function pos_res_thresholding(phases::AbstractVector{<:CrystalPhase},
@@ -60,7 +62,7 @@ bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::In
 function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                          max_search::Int; method::OptimizationMethods,
-                         maxiter::Int=32, regularization::Bool=false)
+                         maxiter::Int=32, regularization::Bool=false, tol::Real = DEFAULT_TOL)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
     # println("searched_node is initiated to have size $(size(searched_node, 1))")
     for level in 1:tree.depth
@@ -76,7 +78,8 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
-                  mean_θ, std_θ, method=method, maxiter=maxiter, regularization=regularization)
+                  mean_θ, std_θ, method=method, maxiter=maxiter,
+                  regularization=regularization) # , tol = tol) TODO: add support for tolerance 
             recon = phases.(x)
             inner = cos_angle(recon, y)
             new_node = Node(phases, ranked_nodes[i].child_node, recon, y.-recon, inner)
