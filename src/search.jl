@@ -61,7 +61,7 @@ bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::In
 """
 function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
-                         max_search::Int; method::OptimizationMethods,
+                         max_search::Int; method::OptimizationMethods = LM,
                          maxiter::Int=32, regularization::Bool=false, tol::Real = DEFAULT_TOL)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
     # println("searched_node is initiated to have size $(size(searched_node, 1))")
@@ -79,7 +79,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
                   mean_θ, std_θ, method=method, maxiter=maxiter,
-                  regularization=regularization) # , tol = tol) TODO: add support for tolerance 
+                  regularization=regularization) # , tol = tol) TODO: add support for tolerance
             recon = phases.(x)
             inner = cos_angle(recon, y)
             new_node = Node(phases, ranked_nodes[i].child_node, recon, y.-recon, inner)
