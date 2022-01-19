@@ -1,17 +1,18 @@
 using Test
 using CrystalTree
-using CrystalTree: log_marginal_likelihood
+using CrystalTree: approximate_negative_log_evidence
 using CrystalTree: bestfirstsearch, find_first_unassigned
 using CrystalShift
-using CrystalShift: CrystalPhase, optimize!, get_free_params, get_parameters
+using CrystalShift: CrystalPhase, optimize!, get_free_params
 using CrystalShift: extend_priors, res!, reconstruct!
 using ProgressBars
-using Plots
 using LinearAlgebra
+# using Plots
+
 
 std_noise = 1e-2
 mean_θ = [1., 1e-3, .1] # Set to favor true solution
-std_θ = [0.05, 10., 1.]
+std_θ = [0.05, 10., .1]
 
 # CrystalPhas object creation
 # path = "data/"
@@ -32,7 +33,8 @@ end
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
 println("$(size(cs, 1)) phase objects created!")
-tree = Tree(cs[1:15], 2)
+max_num_phases = 3
+tree = Tree(cs[1:15], max_num_phases)
 x = collect(8:.035:45)
 y = zero(x)
 
@@ -44,10 +46,15 @@ noise = rand(size(x, 1))
 
 
 y /= maximum(y)
-# @. y += noise*0.01
+# @. y += noise*std_noise
 
+# method = Newton
+# objective = "KL"
+method = LM
+objective = "LS"
 result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 15,
-                        method=LM, maxiter=1000, regularization=true) # should return a bunch of node
+                        method=method, objective = objective,
+                        maxiter=1000, regularization=true) #, verbose = true) # should return a bunch of node
 
 println("Searching done!")
 num_nodes = find_first_unassigned(result) -1
@@ -57,20 +64,22 @@ reconstruction = zeros(length(x), num_nodes)
 num_of_params = zeros(Int64, num_nodes)
 prob = zeros(num_nodes)
 for i in 1:num_nodes
-    θ = get_parameters(result[i].current_phases)
+    θ = get_free_params(result[i].current_phases)
     orig = [p.origin_cl for p in result[i].current_phases]
+    reconstruction[:, i] = reconstruct!(result[i].current_phases, θ, x, zero(x))
     full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
     num_of_params[i] = length(θ)
-    prob[i] = log_marginal_likelihood(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, "LS")
-    reconstruction[:, i] = reconstruct!(result[i].current_phases, θ, x, zero(x))
+    prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective)
     residual_norm[i] = norm(y - reconstruction[:, i])
 end
 
-# i_min = argmin(prob)
-# i_truth = 16
-# println(prob[i_min])
-# println(prob[i_truth])
-#
-# plot(prob, yscale = :log10)
-# plot!(residual_norm)
-# plot!(num_of_params)
+i_min = argmin(prob)
+i_truth = 16
+@test i_min == i_truth # TODO: since this passes, should clean up this file and add it to testgroups
+
+# likelihood_ratio = @. exp(-(prob[16] - prob))
+
+# plotly()
+# plot(prob, yscale = :log10, label = "neg. log evidence")
+# plot!(residual_norm, label = "residual norm")
+# plot!(num_of_params, label = "num. parameters")
