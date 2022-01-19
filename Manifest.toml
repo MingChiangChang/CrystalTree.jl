@@ -201,7 +201,7 @@ version = "4.1.0"
 
 [[deps.CrystalShift]]
 deps = ["BackgroundSubtraction", "CSV", "DataFrames", "JSON", "LinearAlgebra", "NPZ", "OptimizationAlgorithms", "ProgressBars", "Random", "Test"]
-git-tree-sha1 = "701b12038e3ffd8fa1c4a28180b17da676d102cf"
+git-tree-sha1 = "709821bcb1115f9e236c0e4114077a7e49e4cde1"
 repo-rev = "main"
 repo-url = "git@github.com:MingChiangChang/CrystalShift.jl.git"
 uuid = "fb120844-f04e-4a6b-a6eb-278194263097"
