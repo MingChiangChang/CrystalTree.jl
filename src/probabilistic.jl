@@ -3,7 +3,8 @@
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ
 function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::AbstractVector,
 								 y::AbstractVector, std_noise::RealOrVec,
-								 mean_θ::RealOrVec, std_θ::RealOrVec, objective::String, λ::Real = 1e-6)
+								 mean_θ::RealOrVec, std_θ::RealOrVec, objective::String, λ::Real = 1e-6,
+								 verbose::Bool = false)
 	mean_log_θ = log.(mean_θ)
 	f = if objective == "LS"
 			function (log_θ)
@@ -16,7 +17,7 @@ function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::Ab
 		end
 	log_θ = log.(θ)
 	newton!(f, log_θ)
-	return approximate_negative_log_evidence(f, log_θ)
+	return approximate_negative_log_evidence(f, log_θ, verbose)
 end
 
 # NOTE assumes θ is stationary point of θ (i.e. ∇f = 0)
@@ -30,7 +31,7 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 		println("in approximate_negative_log_evidence")
 		display(eigvals(Matrix(Σ)))
 	end
-	return val - (logdet(Σ) + d * log(2π))
+	return val - (logdet(Σ) + d * log(2π)) # 
 end
 
 approximate_evidence(x...) = exp(-approximate_negative_log_evidence(x...))
