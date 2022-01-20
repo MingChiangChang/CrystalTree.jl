@@ -1,7 +1,6 @@
-# using Plots
 module Testtree
 using CrystalTree
-using CrystalTree: search!, bft, pos_res_thresholding
+using CrystalTree: search!, bft, pos_res_thresholding, get_level
 using DelimitedFiles
 using LinearAlgebra
 using Test
@@ -39,11 +38,11 @@ y /= max(y...)
 a = Tree(cs, 3)
 # println(size(a))
 # println("done")
-# @test size(a.nodes)[1]==121
-# traversal = bft(a)
+# @test size(a.nodes, ==121
+traversal = bft(a)
 @testset "bft test" begin
     @test all(n->get_level(n) == 1, traversal[1:15])
-    @test all(n->get_level(n) == 2, traversal[16:end])
+    @test all(n->get_level(n) == 2, traversal[16:120])
 end
 
 # TODO: find bound error
@@ -54,6 +53,5 @@ residual = Float64[]
 
 ind = argmin([norm(i(x)-y) for i in res])
 
-r =  res[ind](x)
-
+@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([1, 2]) 
 end # module
