@@ -1,6 +1,7 @@
 module CrystalTree
 using CrystalShift
 using CrystalShift: CrystalPhase, optimize!
+using LinearAlgebra
 
 export Node, Tree
 

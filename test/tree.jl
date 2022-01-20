@@ -1,7 +1,6 @@
-# using Plots
 module Testtree
 using CrystalTree
-using CrystalTree: search!, bft, pos_res_thresholding
+using CrystalTree: search!, bft, pos_res_thresholding, get_level
 using DelimitedFiles
 using LinearAlgebra
 using Test
@@ -29,7 +28,7 @@ end
 
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
-println("$(size(cs)[1]) phase objects created!")
+# println("$(size(cs)[1]) phase objects created!")
 x = LinRange(8, 45, 1024)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
@@ -37,16 +36,16 @@ y /= max(y...)
 # Tests: Tree construction, BFT, removing multiple child
 
 a = Tree(cs, 3)
-println(size(a))
+# println(size(a))
 # println("done")
-# @test size(a.nodes)[1]==121
-# traversal = bft(a)
-# @testset "bft test" begin
-#     @test all(n->get_level(n) == 1, traversal[1:15])
-#     @test all(n->get_level(n) == 2, traversal[16:end])
-# end
+# @test size(a.nodes, ==121
+traversal = bft(a)
+@testset "bft test" begin
+    @test all(n->get_level(n) == 1, traversal[1:15])
+    @test all(n->get_level(n) == 2, traversal[16:120])
+end
 
-# TODO find bound error
+# TODO: find bound error
 @time res = search!(a, bft, x, y, std_noise,
                     mean_θ, std_θ, 32, true,
                     pos_res_thresholding, 1.)
@@ -54,6 +53,5 @@ residual = Float64[]
 
 ind = argmin([norm(i(x)-y) for i in res])
 
-r =  res[ind](x)
-
+@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([1, 2]) 
 end # module
