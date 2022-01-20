@@ -2,7 +2,6 @@ module Testnode
 using CrystalTree: Node, add_child!, get_nodes_at_level
 using CrystalTree: is_immidiate_child, is_child, get_level
 using CrystalTree: get_phase_ids
-using PhaseMapping: readsticks
 using CrystalShift: CrystalPhase
 using Test
 

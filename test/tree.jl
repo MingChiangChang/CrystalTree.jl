@@ -6,7 +6,6 @@ using DelimitedFiles
 using LinearAlgebra
 using Test
 
-using PhaseMapping: Lorentz
 using CrystalShift: CrystalPhase, optimize!
 
 std_noise = .01

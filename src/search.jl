@@ -37,7 +37,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     end
 end
 
-function pos_res_thresholding(phases::AbstractVector{<:PhaseTypes},
+function pos_res_thresholding(phases::AbstractVector{<:CrystalPhase},
     x::AbstractVector, y::AbstractVector, tol::Real)
     # Only count extra peaks that showed up in reconstruction
     recon = zero(x)

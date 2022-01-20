@@ -3,7 +3,7 @@
 
 
 struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector,
-	        R<:AbstractVector, K<:AbstractVector, I<:Real} <: AbstractNode
+	        R<:AbstractVector, K<:AbstractVector, I<:Real}
 	current_phases::CP
 	child_node::CN
 
