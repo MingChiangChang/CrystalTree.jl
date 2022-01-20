@@ -90,7 +90,7 @@ function get_optimized_nodes_at_level(tree::Tree, level::Int)
     get_optimized_nodes_at_level(tree.nodes, level)
 end
 
-function get_optimized_nodes_at_level(nodes::AbstractVector{Node}, level::Int)
-    idx = [i for i in eachindex(nodes) if get_level(nodes[i])==level && node[i].is_optimized]
+function get_optimized_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
+    idx = [i for i in eachindex(nodes) if get_level(nodes[i])==level && nodes[i].is_optimized]
     return @view nodes[idx] 
 end
