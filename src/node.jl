@@ -1,8 +1,6 @@
 # Do breadth-first-search
 # Recursive?
 
-PhaseTypes = Union{Phase, CrystalPhase}
-abstract type AbstractNode end
 
 struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector,
 	        R<:AbstractVector, K<:AbstractVector, I<:Real} <: AbstractNode
@@ -16,9 +14,7 @@ struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector,
 	is_optimized::Bool
 end
 
-Node{T}() where {T<:PhaseTypes} = Node(T[], Node{<:T}[], 1, Float64[], Float64[], 0., false) # Root
-Node(phases::AbstractVector{<:Phase}, id::Int) = Node(phases, Node{<:Phase}[], id, Float64[], Float64[], 0., false)
-Node(phase::Phase, id::Int) = Node([phase], Node{<:Phase}[], id, Float64[], Float64[], 0., false)
+Node{T}() where {T<:CrystalPhase} = Node(T[], Node{<:T}[], 1, Float64[], Float64[], 0., false) # Root
 Node(CP::CrystalPhase, id::Int) = Node([CP], Node{<:CrystalPhase}[], id, Float64[], Float64[], 0., false)
 Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(CPs, Node{<:CrystalPhase}[], id, Float64[], Float64[], 0., false)
 
