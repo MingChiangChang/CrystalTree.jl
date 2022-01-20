@@ -4,6 +4,7 @@ using CrystalTree: bestfirstsearch
 using Test
 using CrystalShift
 using CrystalShift: CrystalPhase, optimize!
+using LinearAlgebra
 
 
 std_noise = .05
@@ -31,7 +32,7 @@ println("$(size(cs, 1)) phase objects created!")
 tree = Tree(cs[1:15], 3)
 x = collect(8:.035:45)
 y = zero(x)
-@time for node in tree.nodes[2:3]
+for node in tree.nodes[2:3]
     node.current_phases(x, y)
 end
 
@@ -39,8 +40,7 @@ y ./= maximum(y)
 
 result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 40,
                         maxiter=16, regularization=true) # should return a bunch of node
-
-print("done")
+@test argmin([norm(result[i](x).-y) for i in eachindex(result[1:94])]) == 16
 
 end # module
 

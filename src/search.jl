@@ -19,13 +19,11 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
             push!(resulting_nodes, node)
 
             if level<t.depth && prunable(phases, x, y, tol)
-                println("Pruning...")
                 push!(deleting, get_child_node_indicies(node, node_order)...)
             end
         end
 
         node_order = @view node_order[filter!(x->x ∉ deleting, collect(1:size(node_order, 1)))]
-        println(size(node_order, 1))
     end
     resulting_nodes
 end
@@ -73,7 +71,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
         end
-
+        
         num_search = min(max_search, size(ranked_nodes, 1))
         # println("num of search = $(num_search)")
 
