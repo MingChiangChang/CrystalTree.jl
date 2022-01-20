@@ -25,16 +25,28 @@ function Node(CPs::AbstractVector{<:CrystalPhase},
     Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
 
-function Node(node::Node, phases::AbstractVector{<:CrystalPhase})
-    check_same_phase(node, phases)
+function Node(node::Node, phases::AbstractVector{<:CrystalPhase},
+	          x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
+    check_same_phase(node, phases) || error("Phases must be the same as in the node")
+    recon = phases.(x)
+	Node(node.current_phases, node.child_node, node.id, 
+	     recon, y.-recon, cos_angle(recon, y), isOptimized)
 end
 
 function check_same_phase(node::Node, phases::AbstractVector{<:CrystalPhase})
 	check_same_phase(node.current_phases, phases)
 end
 
-function check_same_phase(phase_comb::AbstractVector{<:CrystalPhase}, 
-	                      )
+function check_same_phase(phase_comb1::AbstractVector{<:CrystalPhase}, 
+	                      phase_comb2::AbstractVector{<:CrystalPhase})
+    ids_1 = Set([phase_comb1[i].id for i in eachindex(phase_comb1)])
+	ids_2 = Set([phase_comb2[i].id for i in eachindex(phase_comb2)])
+
+	names_1 = Set([phase_comb1[i].name for i in eachindex(phase_comb1)])
+	names_2 = Set([phase_comb1[i].name for i in eachindex(phase_comb1)])
+
+	ids_1 == ids_2 && names_1 == names_2
+end
 
 function Base.show(io::IO, node::Node)
 	println("Node ID: $(node.id)")

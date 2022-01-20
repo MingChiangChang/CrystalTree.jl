@@ -8,14 +8,13 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     for level in 1:t.depth
         nodes = get_nodes_at_level(node_order, level)
         deleting = Set()
-        
+
         @threads for node in nodes
             phases = optimize!(node.current_phases, x, y, std_noise,
                   mean, std, method=LM, maxiter=maxiter, regularization=regularization)
-            recon = phases.(x)
-            node = Node(node.current_phases, node.child_node, 
-                        node.id, recon, y.-recon, cos_angle(recon, y), true)
-            push!(resulting_nodes, node)
+            
+            push!(resulting_nodes, Node(node, phases, x, y))
+
             if level < t.depth && prunable(phases, x, y, tol)
                 push!(deleting, get_child_node_indicies(node, node_order)...)
             end

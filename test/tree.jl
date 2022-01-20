@@ -29,7 +29,7 @@ end
 
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
-println("$(size(cs)[1]) phase objects created!")
+# println("$(size(cs)[1]) phase objects created!")
 x = LinRange(8, 45, 1024)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
@@ -37,14 +37,14 @@ y /= max(y...)
 # Tests: Tree construction, BFT, removing multiple child
 
 a = Tree(cs, 3)
-println(size(a))
+# println(size(a))
 # println("done")
 # @test size(a.nodes)[1]==121
 # traversal = bft(a)
-# @testset "bft test" begin
-#     @test all(n->get_level(n) == 1, traversal[1:15])
-#     @test all(n->get_level(n) == 2, traversal[16:end])
-# end
+@testset "bft test" begin
+    @test all(n->get_level(n) == 1, traversal[1:15])
+    @test all(n->get_level(n) == 2, traversal[16:end])
+end
 
 # TODO: find bound error
 @time res = search!(a, bft, x, y, std_noise,
