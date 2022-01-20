@@ -1,4 +1,4 @@
-# module Testsearch
+module Testsearch
 using CrystalTree
 using CrystalTree: bestfirstsearch, res_bfs, find_first_unassigned
 using CrystalTree: get_all_child_node_ids, get_ids, get_all_child_node
@@ -11,7 +11,7 @@ mean_θ = [1., 1., .2]
 std_θ = [.2, 10., 1.]
 
 # CrystalPhas object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -53,4 +53,4 @@ ind = argmin(res)
 @test Set([result[ind].current_phases[i].id for i in eachindex(result[ind].current_phases)]) == Set([0, 1]) 
 
 
-# end # module
+end # module
