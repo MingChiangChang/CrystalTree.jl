@@ -14,11 +14,10 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         @threads for node in nodes
             phases = optimize!(node.current_phases, x, y, std_noise,
                   mean, std, method=LM, maxiter=maxiter, regularization=regularization)
-            recon = phases.(x)
-            node = Node(node.current_phases, node.child_node, recon, y.-recon, cos_angle(recon, y))
-            push!(resulting_nodes, node)
+            
+            push!(resulting_nodes, Node(node, phases, x, y))
 
-            if level<t.depth && prunable(phases, x, y, tol)
+            if level < t.depth && prunable(phases, x, y, tol)
                 push!(deleting, get_child_node_indicies(node, node_order)...)
             end
         end
@@ -63,9 +62,9 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
                          method::OptimizationMethods = LM, objective::String = "LS",
                          maxiter::Int=32, regularization::Bool=false, tol::Real = DEFAULT_TOL)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
-    # println("searched_node is initiated to have size $(size(searched_node, 1))")
+
     for level in 1:tree.depth
-        # println("Working on level $(level)")
+
         if level != 1
             ranked_nodes = rank_nodes_at_level(tree, level, searched_node, y)
         else
@@ -73,15 +72,14 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
         end
         
         num_search = min(max_search, size(ranked_nodes, 1))
-        # println("num of search = $(num_search)")
+
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
-                               mean_θ, std_θ, method=method, objective = objective,
-                               maxiter=maxiter, regularization=regularization) # , tol = tol) TODO: add support for tolerance
+                  mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             inner = cos_angle(recon, y)
-            new_node = Node(phases, ranked_nodes[i].child_node, recon, y.-recon, inner)
+            new_node = Node(phases, ranked_nodes[i].child_node, ranked_nodes[i].id, recon, y.-recon, inner, true)
             ranked_nodes[i] = new_node
         end
         record_node!(searched_node, ranked_nodes[1:num_search])
@@ -103,6 +101,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
         end
 
+
         num_search = min(max_search[level], size(ranked_nodes, 1))
         # println("num of search = $(num_search)")
 
@@ -113,7 +112,8 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                                maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             inner = cos_angle(recon, y)
-            new_node = Node(phases, ranked_nodes[i].child_node, recon, inner)
+            new_node = Node(phases, ranked_nodes[i].child_node, 
+                           ranked_nodes[i].id, recon, y.-recon, inner, true)
             ranked_nodes[i] = new_node
         end
         record_node!(searched_node, ranked_nodes[1:num_search])
@@ -134,6 +134,77 @@ function rank_nodes_at_level(tree::Tree, level::Int,
     order = sortperm(inner, rev=true)
     return nodes[order]
 end
+
+# residual-bestfirstsearch functions
+function res_bfs(tree::Tree, x::AbstractVector, y::AbstractVector, 
+    std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
+    max_search::Int; maxiter::Int=32, regularization::Bool=false) 
+    
+    searched_node = Vector{Node}(undef, max_search*tree.depth) # to store results
+
+    for level in 1:tree.depth
+        println("Working on level $(level)")
+        ranked_nodes = rank_nodes_with_res_at_level(tree, level, x, max_search)
+
+        num_search = min(max_search, size(ranked_nodes, 1))
+        println("num of search = $(num_search)")
+
+        @threads for i in 1:num_search
+            phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
+            mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
+            recon = phases.(x)
+            inner = cos_angle(recon, y)
+            res = copy(y)
+            new_node = Node(phases, ranked_nodes[i].child_node, ranked_nodes[i].id, recon, y.-recon, inner, true)
+            ranked_nodes[i] = new_node
+        end
+    record_node!(searched_node, ranked_nodes[1:num_search])
+    end
+    searched_node
+end
+
+function rank_nodes_with_res_at_level(tree::Tree, level::Int, x::AbstractVector, max_search::Int)
+    if level == 1
+        nodes = get_nodes_at_level(tree.nodes, level)
+    else
+        optimized_nodes_from_previous_level = get_optimized_nodes_at_level(tree.nodes, level-1)
+        
+        for node in optimized_nodes_from_previous_level
+            for cn in node.child_node
+                cn = Node(cn.current_phases, cn.child_node, cn.id, cn.recon, cn.residual, 
+                cos_angle(cn(x), node.residual),
+                false)
+            end
+        end
+        
+        nodes = get_top_inner_child_nodes(tree, optimized_nodes_from_previous_level, max_search)
+    end
+
+    return nodes
+end
+
+function get_top_inner_child_nodes(tree::Tree, nodes::AbstractVector{<:Node}, max_search::Int)
+    candidate_nodes = get_all_child_node(tree, nodes)
+    inners = [candidate_nodes[i].inner for i in eachindex(candidate_nodes)]
+    ranking = sortperm(inners, rev=true)
+    return @view candidate_nodes[ranking[1:max_search]]
+end
+
+function get_all_child_node(tree::Tree, nodes::AbstractVector{<:Node})
+    return @view tree.nodes[get_all_child_node_ids(nodes)]
+end
+
+function get_all_child_node_ids(nodes::AbstractVector{<:Node})
+    ids = Int64[]
+    for node in nodes
+        ids = vcat(ids, get_child_ids(node))
+    end
+    ids
+end
+
+
+
+
 
 """
 Take a tree and an array node, return the estimated inner product

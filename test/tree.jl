@@ -1,11 +1,10 @@
-# using Plots
 module Testtree
 using CrystalTree
-using CrystalTree: search!, bft, pos_res_thresholding
+using CrystalTree: search!, bft, pos_res_thresholding, get_level
 using DelimitedFiles
-using Test
 using LinearAlgebra
-using PhaseMapping: Lorentz
+using Test
+
 using CrystalShift: CrystalPhase, optimize!
 
 std_noise = .01
@@ -29,6 +28,7 @@ end
 
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
+
 x = LinRange(8, 45, 1024)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
@@ -37,11 +37,20 @@ y /= max(y...)
 
 a = Tree(cs, 3)
 
-res = search!(a, bft, x, y, std_noise,
-                    mean_θ, std_θ, pos_res_thresholding,
-                    maxiter = 32, regularization = true, tol = 1.)
+traversal = bft(a)
+@testset "bft test" begin
+    @test all(n->get_level(n) == 1, traversal[1:15])
+    @test all(n->get_level(n) == 2, traversal[16:120])
+end
 
-ind = argmin([norm(res[i](x).-y) for i in eachindex(res)])
-@test Set([res[ind][i].id for i in eachindex(res[ind].current_phases)]) == Set([0, 1])
+# TODO: find bound error
+@time res = search!(a, bft, x, y, std_noise,
+                    mean_θ, std_θ, 32, true,
+                    pos_res_thresholding, 1.)
+residual = Float64[]
 
+ind = argmin([norm(i(x)-y) for i in res])
+
+@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([1, 2]) 
 end # module
+

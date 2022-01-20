@@ -2,7 +2,6 @@ module Testnode
 using CrystalTree: Node, add_child!, get_nodes_at_level
 using CrystalTree: is_immidiate_child, is_child, get_level
 using CrystalTree: get_phase_ids
-using PhaseMapping: readsticks
 using CrystalShift: CrystalPhase
 using Test
 
@@ -27,10 +26,10 @@ println("$(size(cs, 1)) phase objects created!")
 
 # Creating objects for testing
 root = Node{CrystalPhase}()
-node1 = Node(cs[1])
-node2 = Node([cs[1], cs[2]])
-node3 = Node([cs[1], cs[2]])
-node4 = Node([cs[1], cs[2], cs[3]])
+node1 = Node(cs[1], 2)
+node2 = Node([cs[1], cs[2]], 3)
+node3 = Node([cs[1], cs[2]], 4)
+node4 = Node([cs[1], cs[2], cs[3]], 5)
 
 add_child!(root, node1)
 add_child!(node1, node2)
