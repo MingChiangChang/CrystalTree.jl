@@ -1,7 +1,6 @@
 # Do breadth-first-search
 # Recursive?
 
-
 struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector,
 	        R<:AbstractVector, K<:AbstractVector, I<:Real}
 	current_phases::CP
@@ -14,6 +13,7 @@ struct Node{T, CP<:AbstractVector{T}, CN<:AbstractVector,
 	is_optimized::Bool
 end
 
+
 Node{T}() where {T<:CrystalPhase} = Node(T[], Node{<:T}[], 1, Float64[], Float64[], 0., false) # Root
 Node(CP::CrystalPhase, id::Int) = Node([CP], Node{<:CrystalPhase}[], id, Float64[], Float64[], 0., false)
 Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(CPs, Node{<:CrystalPhase}[], id, Float64[], Float64[], 0., false)
@@ -24,6 +24,12 @@ function Node(CPs::AbstractVector{<:CrystalPhase},
 	recon = CPs.(x)
     Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
+
+
+(node::Node)(x::AbstractVector) = node.current_phases.(x)
+
+Base.getindex(n::Node, i::Int) = Base.getindex(n.current_phases, i)
+Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]
 
 function Node(node::Node, phases::AbstractVector{<:CrystalPhase},
 	          x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
@@ -110,7 +116,7 @@ get_ids(nodes::AbstractVector{<:Node}) = [node.id for node in nodes]
 # O(n) for now, can improve to O(1)
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
 	idx = [i for i in eachindex(nodes) if get_level(nodes[i])==level]
-    return @view nodes[idx] 
+    return @view nodes[idx]
 end
 
 function get_node_with_id(nodes::AbstractVector, id::Int)
@@ -134,8 +140,17 @@ function get_node_with_id(nodes::AbstractVector, ids::AbstractVector{<:Int})
 end
 
 
+function get_node_with_exact_ids(nodes::AbstractVector, ids::AbstractVector)
+    for i in eachindex(nodes)
+		if get_phase_ids(nodes[i]) == ids
+            return i, @view nodes[i]
+		end
+	end
+end
+
 (node::Node)(x::AbstractVector) = node.current_phases.(x)
 cos_angle(node::Node, x::AbstractVector) = cos_angle(node(x), x)
+
 
 function fit!(node::Node, x::AbstractVector, y::AbstractVector,
 	std_noise::Real, mean::AbstractVector, std::AbstractVector,
@@ -167,7 +182,7 @@ end
 function residual(node::Node, θ::AbstractVector,
 	              x::AbstractVector, y::AbstractVector)
 	residual = copy(y)
-	
+
 	for phase in node.current_phases
 	    full_θ = get_eight_params(phase, θ)
 	    residual .-= CrystalPhase(phase, θ).(x)

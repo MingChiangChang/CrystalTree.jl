@@ -28,17 +28,15 @@ end
 
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s))
-# println("$(size(cs)[1]) phase objects created!")
+
 x = LinRange(8, 45, 1024)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
 
-# Tests: Tree construction, BFT, removing multiple child
+# TODO: add unit test for smaller function
 
 a = Tree(cs, 3)
-# println(size(a))
-# println("done")
-# @test size(a.nodes, ==121
+
 traversal = bft(a)
 @testset "bft test" begin
     @test all(n->get_level(n) == 1, traversal[1:15])
@@ -47,11 +45,12 @@ end
 
 # TODO: find bound error
 @time res = search!(a, bft, x, y, std_noise,
-                    mean_θ, std_θ, 32, true,
-                    pos_res_thresholding, 1.)
+                    mean_θ, std_θ, pos_res_thresholding, 
+                    maxiter = 32, regularization = true, tol = 1.)
 residual = Float64[]
 
 ind = argmin([norm(i(x)-y) for i in res])
 
-@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([1, 2]) 
+@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([0, 1]) 
 end # module
+

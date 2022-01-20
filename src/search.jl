@@ -1,7 +1,9 @@
+const DEFAULT_TOL = 1e-6
+
 function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     y::AbstractVector, std_noise::Real, mean::AbstractVector,
-    std::AbstractVector, maxiter=32, regularization::Bool=true,
-    prunable::Function=(p, x, y, t)->false, tol::Real=1e-3)
+    std::AbstractVector, prunable;
+    maxiter::Int = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
 
     resulting_nodes = Node[]
     node_order = traversal_func(t)
@@ -19,6 +21,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
                 push!(deleting, get_child_node_indicies(node, node_order)...)
             end
         end
+
         node_order = @view node_order[filter!(x->x ∉ deleting, collect(1:size(node_order, 1)))]
     end
     resulting_nodes
@@ -26,14 +29,16 @@ end
 
 
 function search!(t::Tree, traversal_func::Function, x::AbstractVector,
-    y::AbstractVector, std_noise::Real, mean::AbstractVector,
-    std::AbstractVector, maxiter=32, regularization::Bool=true,
-    tol::Real=1e-3)
+                y::AbstractVector, std_noise::Real, mean::AbstractVector,
+                std::AbstractVector;
+                maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
     node_order = traversal_func(t)
+
     @threads for node in node_order
         @time optimize!(node.current_phases, x, y, std_noise, mean, std,
                         method=LM, maxiter=maxiter, regularization=regularization)
     end
+
 end
 
 function pos_res_thresholding(phases::AbstractVector{<:CrystalPhase},
@@ -53,16 +58,21 @@ bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector, max_search::In
 """
 function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
                          std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
-                         max_search::Int; maxiter::Int=32, regularization::Bool=false)
+                         max_search::Int;
+                         method::OptimizationMethods = LM, objective::String = "LS",
+                         maxiter::Int=32, regularization::Bool=false, tol::Real = DEFAULT_TOL)
     searched_node = Vector{Node}(undef, max_search*tree.depth)
+
     for level in 1:tree.depth
+
         if level != 1
             ranked_nodes = rank_nodes_at_level(tree, level, searched_node, y)
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
         end
-
+        
         num_search = min(max_search, size(ranked_nodes, 1))
+
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
@@ -79,21 +89,27 @@ end
 
 function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                 std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
-                max_search::AbstractArray; maxiter::Int=32, regularization::Bool=false)
-    
+                max_search::AbstractArray; maxiter::Int=32, regularization::Bool=false,
+                method::OptimizationMethods = LM, objective::String = "LS")
     searched_node = Vector{Node}(undef, sum(max_search))
+    # println("searched_node is initiated to have size $(size(searched_node, 1))")
     for level in 1:tree.depth
+        # println("Working on level $(level)")
         if level != 1
             ranked_nodes = rank_nodes_at_level(tree, level, searched_node, r)
         else
             ranked_nodes = get_nodes_at_level(tree.nodes, level)
         end
 
-        num_search = min(max_search, size(ranked_nodes, 1))
+
+        num_search = min(max_search[level], size(ranked_nodes, 1))
+        # println("num of search = $(num_search)")
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
-            mean_θ, std_θ, maxiter=maxiter, regularization=regularization)
+                               mean_θ, std_θ,
+                               method=method, objective = objective,
+                               maxiter=maxiter, regularization=regularization)
             recon = phases.(x)
             inner = cos_angle(recon, y)
             new_node = Node(phases, ranked_nodes[i].child_node, 
@@ -278,6 +294,7 @@ function estimate_recon_sum(path_nodes::AbstractVector{Node},
                             first_level_nodes::AbstractVector{Node},
                             ids::AbstractVector)
     recon_sum = zeros(size(path_nodes[1].inner, 1))
+
     for i in reverse(eachindex(path_nodes))
         if isempty(ids)
             return recon_sum
@@ -289,11 +306,89 @@ function estimate_recon_sum(path_nodes::AbstractVector{Node},
             filter!(x->x ∉ node_ids, ids)
         end
     end
+
     if !isempty(ids)
-        nodes = get_node_with_id(ids)
+        nodes = get_node_with_id(path_nodes, ids)
         for n in nodes
             recon_sum .+= n.recon
         end
     end
+
     return recon_sum
+end
+
+const RealOrVec = Union{Real, AbstractVector{<:Real}}
+
+function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
+				  	   y::AbstractVector, std_noise::Real)
+	residual = copy(y)
+	cps = node.current_phases
+	res!(cps, θ, x, residual)
+	residual ./= std_noise
+	return sum(abs2, residual)
+end
+
+function regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::Real)
+    θ_c = remove_act_from_θ(θ, node.current_phases)
+	par = @. (θ_c - mean_θ) / std_θ
+	sum(abs2, par)
+end
+
+# θ = get_parameters(result[i].current_phases)
+# # println("θ: $(θ)")
+# # println(result[i].current_phases)
+# test_y = convert(Vector{Real}, y)
+# orig = [p.origin_cl for p in result[i].current_phases]
+# full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
+
+function total_loss(node::Node, θ::AbstractVector, x::AbstractVector,
+				  	   y::AbstractVector, std_noise::RealOrVec,  mean_θ::RealOrVec, std_θ::RealOrVec)
+    sos_objective(node, θ, x, y, std_noise) + regularizer(node, θ, mean_θ, std_θ)
+end
+
+function evaluate_result(nodes::AbstractVector{<:Node},
+                          x::AbstractVector, y::AbstractVector,
+                          threshold::Float64)
+    res_nodes = leveled_residual(nodes, x, y)
+    evaluate_phase_numbers(res_nodes, x, y, threshold)
+end
+
+function leveled_residual(nodes::AbstractVector{<:Node},
+                          x::AbstractVector, y::AbstractVector)
+    residuals = [norm(node.recon - y) for node in nodes]
+
+    #residuals = [total_loss(node.recon - y) for node in nodes]
+    level = [size(node.current_phases, 1) for node in nodes]
+    depth = length(Set(level))
+
+    minimum_node_idx = Int64[]
+
+    for d in 1:depth
+        idx = 1
+        min = typemax(Float64)
+        for i in eachindex(residuals)
+            if level[i] == d && residuals[i] < min
+                idx = i
+                min = residuals[i]
+            end
+        end
+        push!(minimum_node_idx, idx)
+    end
+
+    nodes[minimum_node_idx]
+end
+
+function evaluate_phase_numbers(nodes::AbstractVector{<:Node},
+                                x::AbstractVector, y::AbstractVector,
+                                threshold::Float64)
+    res = typemax(Float64)
+    for (level, node) in enumerate(nodes)
+        # println(level)
+        if res - norm(node.recon - y) > threshold
+            res = norm(node.recon - y)
+        else
+            return nodes[level-1]
+        end
+    end
+    return nodes[end]
 end

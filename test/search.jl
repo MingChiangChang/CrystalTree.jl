@@ -3,12 +3,14 @@ using CrystalTree
 using CrystalTree: bestfirstsearch, res_bfs, find_first_unassigned
 using CrystalTree: get_all_child_node_ids, get_ids, get_all_child_node
 using Test
+using CrystalShift
 using CrystalShift: CrystalPhase, optimize!
 using LinearAlgebra
 
+
 std_noise = .05
-mean_θ = [1., 1., .2]
-std_θ = [.2, 10., 1.]
+mean_θ = [1., 1e-4, .2]
+std_θ = [.2, 100, 1.]
 
 # CrystalPhas object creation
 path = "../data/"
@@ -31,9 +33,16 @@ println("$(size(cs, 1)) phase objects created!")
 tree = Tree(cs[1:15], 3)
 x = collect(8:.035:45)
 y = zero(x)
-@time for node in tree.nodes[2:3]
+for node in tree.nodes[2:3]
     node.current_phases(x, y)
 end
+
+
+y ./= maximum(y)
+
+result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 40,
+                        maxiter=16, regularization=true) # should return a bunch of node
+@test argmin([norm(result[i](x).-y) for i in eachindex(result[1:94])]) == 16
 
 result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 20,
                         maxiter=1000, regularization=true) # should return a bunch of node

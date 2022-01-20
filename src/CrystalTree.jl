@@ -1,7 +1,9 @@
 module CrystalTree
+using ForwardDiff
 using CrystalShift
-using CrystalShift: CrystalPhase, optimize!
-using LinearAlgebra
+using CrystalShift: CrystalPhase, optimize!, _residual!, _prior, kl
+using LazyInverses
+using OptimizationAlgorithms
 
 export Node, Tree
 
@@ -9,6 +11,6 @@ include("util.jl")
 include("node.jl")
 include("tree.jl")
 include("search.jl")
-
+include("probabilistic.jl")
 
 end
