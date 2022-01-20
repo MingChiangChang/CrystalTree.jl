@@ -29,6 +29,16 @@ function Node(CPs::AbstractVector{<:CrystalPhase},
     Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
 
+function Node(node::Node, phases::AbstractVector{<:CrystalPhase})
+    check_same_phase(node, phases)
+end
+
+function check_same_phase(node::Node, phases::AbstractVector{<:CrystalPhase})
+	check_same_phase(node.current_phases, phases)
+end
+
+function check_same_phase(phase_comb::AbstractVector{<:CrystalPhase}, 
+	                      )
 
 function Base.show(io::IO, node::Node)
 	println("Node ID: $(node.id)")
@@ -88,6 +98,7 @@ get_phase_ids(node::Node) = [p.id for p in node.current_phases]
 get_inner(nodes::AbstractVector{<:Node}) = [node.inner for node in nodes]
 get_child_ids(node::Node) = [node.child_node[i].id for i in eachindex(node.child_node)]
 get_ids(nodes::AbstractVector{<:Node}) = [node.id for node in nodes]
+
 # O(n) for now, can improve to O(1)
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
 	idx = [i for i in eachindex(nodes) if get_level(nodes[i])==level]
