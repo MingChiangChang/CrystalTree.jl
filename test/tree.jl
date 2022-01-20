@@ -47,7 +47,7 @@ println(size(a))
 #     @test all(n->get_level(n) == 2, traversal[16:end])
 # end
 
-# TODO find bound error
+# TODO: find bound error
 @time res = search!(a, bft, x, y, std_noise,
                     mean_θ, std_θ, 32, true,
                     pos_res_thresholding, 1.)

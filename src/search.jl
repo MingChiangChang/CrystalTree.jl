@@ -8,6 +8,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     for level in 1:t.depth
         nodes = get_nodes_at_level(node_order, level)
         deleting = Set()
+        
         @threads for node in nodes
             phases = optimize!(node.current_phases, x, y, std_noise,
                   mean, std, method=LM, maxiter=maxiter, regularization=regularization)
@@ -128,11 +129,7 @@ function res_bfs(tree::Tree, x::AbstractVector, y::AbstractVector,
 
     for level in 1:tree.depth
         println("Working on level $(level)")
-        if level != 1
-            ranked_nodes = rank_nodes_with_res_at_level(tree, level, x, max_search)
-        else
-            ranked_nodes = get_nodes_at_level(tree.nodes, level)
-        end
+        ranked_nodes = rank_nodes_with_res_at_level(tree, level, x, max_search)
 
         num_search = min(max_search, size(ranked_nodes, 1))
         println("num of search = $(num_search)")

@@ -1,4 +1,4 @@
-# TODO Parameter/Criteria for stopping
+# TODO: Parameter/Criteria for stopping
 # 1. Low residual (good stop)
 # 2. To many extra peaks (bad stop/killed)
 #    Condition: norm(max.(fitted-data)./data) ?
@@ -75,8 +75,8 @@ end
 function remove_subtree!(nodes::AbstractVector{<:Node}, root_of_subtree::Node)
     # Given a vector of node and a node, remove
 	# all the node that are child of the node
-	# TODO Should remove there relationship as well??
-	# TODO Will GC take care?
+	# TODO: Should remove there relationship as well??
+	# TODO: Will GC take care?
 	to_be_removed = Int[]
     for (idx, node) in enumerate(nodes)
 		if is_child(root_of_subtree, node) && root_of_subtree != node

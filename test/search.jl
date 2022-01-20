@@ -1,10 +1,10 @@
 # module Testsearch
 using CrystalTree
-using CrystalTree: bestfirstsearch, res_bfs
+using CrystalTree: bestfirstsearch, res_bfs, find_first_unassigned
 using CrystalTree: get_all_child_node_ids, get_ids, get_all_child_node
 using Test
 using CrystalShift: CrystalPhase, optimize!
-using BenchmarkTools
+using LinearAlgebra
 
 std_noise = .05
 mean_θ = [1., 1., .2]
@@ -46,6 +46,11 @@ result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 20,
     @test Set(get_ids(get_all_child_node(tree, tree.nodes[1:1]))) == Set(collect(2:16))
 end
 
+last_ind = find_first_unassigned(result) - 1
+
+res = [norm(result[i](x).-y) for i in 1:last_ind]
+ind = argmin(res)
+@test Set([result[ind].current_phases[i].id for i in eachindex(result[ind].current_phases)]) == Set([0, 1]) 
 
 
 # end # module
