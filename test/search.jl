@@ -61,4 +61,4 @@ res = [norm(result[i](x).-y) for i in 1:last_ind]
 ind = argmin(res)
 @test Set([result[ind].current_phases[i].id for i in eachindex(result[ind].current_phases)]) == Set([0, 1]) 
 
-
+end # module

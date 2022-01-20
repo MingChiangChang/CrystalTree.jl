@@ -3,7 +3,7 @@ uuid = "9c8cff83-2ad6-4961-8214-2a9086396538"
 authors = ["Ming-Chiang Chang <mc2663@cornell.edu>"]
 version = "0.1.0"
 
-
+[deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
@@ -13,6 +13,5 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LazyInverses = "9f18896c-49a9-43cc-8eef-c455a8a119c6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OptimizationAlgorithms = "5eef6961-c6df-46a7-ba44-0f01c6045f8f"
-PhaseMapping = "82f33ccb-cd31-4690-8856-89c050ee4e49"
 ProgressBars = "49802e3a-d2f1-5c88-81d8-b72133a6f568"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

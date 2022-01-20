@@ -45,12 +45,12 @@ end
 
 # TODO: find bound error
 @time res = search!(a, bft, x, y, std_noise,
-                    mean_θ, std_θ, 32, true,
-                    pos_res_thresholding, 1.)
+                    mean_θ, std_θ, pos_res_thresholding, 
+                    maxiter = 32, regularization = true, tol = 1.)
 residual = Float64[]
 
 ind = argmin([norm(i(x)-y) for i in res])
 
-@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([1, 2]) 
+@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([0, 1]) 
 end # module
 

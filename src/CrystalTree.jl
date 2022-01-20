@@ -2,7 +2,6 @@ module CrystalTree
 using ForwardDiff
 using CrystalShift
 using CrystalShift: CrystalPhase, optimize!, _residual!, _prior, kl
-using PhaseMapping: Phase
 using LazyInverses
 using OptimizationAlgorithms
 
