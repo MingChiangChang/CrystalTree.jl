@@ -17,4 +17,4 @@ ProgressBars = "49802e3a-d2f1-5c88-81d8-b72133a6f568"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-BenchmarkTools = "1"
+ForwardDiff = "0.10"
