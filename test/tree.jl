@@ -51,6 +51,9 @@ residual = Float64[]
 
 ind = argmin([norm(i(x)-y) for i in res])
 
-@test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([0, 1]) 
+@testset "Basic tree search with trimming" begin
+    @test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([0, 1]) 
+end
+
 end # module
 
