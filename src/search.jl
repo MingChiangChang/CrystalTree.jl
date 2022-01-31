@@ -122,7 +122,7 @@ function rank_nodes_at_level(tree::Tree, level::Int,
                              searched_nodes::AbstractVector{<:Node},
                              r::AbstractVector)
     nodes = get_nodes_at_level(tree.nodes, level)
-    inner = matching_pursuit(searched_nodes, nodes, r)
+    inner = matching_pursuit(tree, nodes, r)
     order = sortperm(inner, rev=true)
     return nodes[order]
 end
@@ -202,8 +202,9 @@ function matching_pursuit(tree::Tree, nodes::AbstractVector{<:Node},
     first_level_nodes = get_nodes_at_level(tree.nodes, 1)
     inner_arr = zeros(size(nodes, 1))
     @threads for i in eachindex(nodes)
-        matching_pursuit(first_level_nodes, nodes[i], y)
+        inner_arr[i] = matching_pursuit(first_level_nodes, nodes[i], y)
     end
+    inner_arr
 end
 
 function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
@@ -218,13 +219,13 @@ function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
     return cos_angle(recon_sum, y)
 end
 
-# TODO: Wrong implementation after second level
+
 function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
                         phase_ids::AbstractVector)
     node_indices = Vector{Int}()
-    last_index = find_first_unassigned(candidate_nodes)-1
+    # last_index = find_first_unassigned(candidate_nodes)-1
 
-    candidate_ids = [get_phase_ids(c)[1] for c in candidate_nodes[1:last_index]]
+    candidate_ids = [get_phase_ids(c)[1] for c in candidate_nodes]#[1:last_index]]
 
     for (ind, id) in enumerate(candidate_ids)
         if id in phase_ids
