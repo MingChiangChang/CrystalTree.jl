@@ -173,8 +173,7 @@ end
 function sum_recon(nodes::AbstractVector{<:Node})
     s = zeros(size(nodes[1].recon, 1))
     for node in nodes
-		r = node.recon./maximum(node.recon)
-        s += r
+        s += node.recon
 	end
 	s./maximum(s) # Remove normalizzation
 end

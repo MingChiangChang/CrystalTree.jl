@@ -5,11 +5,11 @@ using DelimitedFiles
 using LinearAlgebra
 using Test
 
-using CrystalShift: CrystalPhase, optimize!
+using CrystalShift: CrystalPhase, optimize!, Lorentz, PseudoVoigt
 
 std_noise = .01
 mean_θ = [1., 1., .2]
-std_θ = [.5, 10., 1.]
+std_θ = [.5, 0.5, 1.]
 
 # CrystalPhas object creation
 path = "../data/"
@@ -27,7 +27,7 @@ if s[end] == ""
 end
 
 cs = Vector{CrystalPhase}(undef, size(s))
-@. cs = CrystalPhase(String(s))
+@. cs = CrystalPhase(String(s), (0.1, ), (PseudoVoigt(0.5), ))
 
 x = LinRange(8, 45, 1024)
 y = cs[1].(x)+cs[2].(x)
@@ -35,7 +35,7 @@ y /= max(y...)
 
 # TODO: add unit test for smaller function
 
-a = Tree(cs, 3)
+a = Tree(cs, 2)
 
 traversal = bft(a)
 @testset "bft test" begin
@@ -46,13 +46,13 @@ end
 # TODO: find bound error
 @time res = search!(a, bft, x, y, std_noise,
                     mean_θ, std_θ, pos_res_thresholding, 
-                    maxiter = 32, regularization = true, tol = 1.)
+                    maxiter = 64, regularization = true, tol = 1.)
 residual = Float64[]
 
 ind = argmin([norm(i(x)-y) for i in res])
 
 @testset "Basic tree search with trimming" begin
-    @test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([0, 1]) 
+    @test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([1, 2]) 
 end
 
 end # module

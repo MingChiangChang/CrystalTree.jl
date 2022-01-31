@@ -40,7 +40,7 @@ x = data.Q
 
 result_node = Node[]
 
-for y in ProgressBar(eachcol(data.I))
+for y in ProgressBar(eachcol(data.I[:,1:1]))
     y ./= maximum(y)
 
     @time result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 33,
@@ -58,7 +58,7 @@ for y in ProgressBar(eachcol(data.I))
         θ = get_free_params(result[i].current_phases)
         orig = [p.origin_cl for p in result[i].current_phases]
         # reconstruction[:, i] = reconstruct!(result[i].current_phases, θ, x, zero(x))
-        full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
+        full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].current_phases)
         # num_of_params[i] = length(θ)
         prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective, true)
         # residual_norm[i] = norm(y - reconstruction[:, i])

@@ -11,14 +11,16 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         nodes = get_nodes_at_level(node_order, level)
         deleting = Set()
 
-        @threads for node in nodes
-            phases = optimize!(node.current_phases, x, y, std_noise,
-                  mean, std, method=LM, maxiter=maxiter, regularization=regularization)
+        @threads for i in eachindex(nodes)
             
-            push!(resulting_nodes, Node(node, phases, x, y))
+            phases = optimize!(nodes[i].current_phases, x, y, std_noise,
+                              mean, std, method=LM,
+                              maxiter=maxiter,
+                              regularization=regularization)
+            push!(resulting_nodes, Node(nodes[i], phases, x, y))
 
             if level < t.depth && prunable(phases, x, y, tol)
-                push!(deleting, get_child_node_indicies(node, node_order)...)
+                push!(deleting, get_child_node_indicies(nodes[i], node_order)...)
             end
         end
 
@@ -32,6 +34,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
                 y::AbstractVector, std_noise::Real, mean::AbstractVector,
                 std::AbstractVector;
                 maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
+                
     node_order = traversal_func(t)
 
     @threads for node in node_order
@@ -72,7 +75,6 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
         end
         
         num_search = min(max_search, size(ranked_nodes, 1))
-
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
@@ -128,25 +130,20 @@ end
 # residual-bestfirstsearch functions
 function res_bfs(tree::Tree, x::AbstractVector, y::AbstractVector, 
     std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
-    max_search::Int; maxiter::Int=32, regularization::Bool=false) 
+    max_search::Int; method::OptimizationMethods = LM, objective::String = "LS",
+    maxiter::Int=32, regularization::Bool=false) 
     
     searched_node = Vector{Node}(undef, max_search*tree.depth) # to store results
 
     for level in 1:tree.depth
-        println("Working on level $(level)")
         ranked_nodes = rank_nodes_with_res_at_level(tree, level, x, max_search)
 
         num_search = min(max_search, size(ranked_nodes, 1))
-        println("num of search = $(num_search)")
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
             mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
-            recon = phases.(x)
-            inner = cos_angle(recon, y)
-            res = copy(y)
-            new_node = Node(phases, ranked_nodes[i].child_node, ranked_nodes[i].id, recon, y.-recon, inner, true)
-            ranked_nodes[i] = new_node
+            ranked_nodes[i] = Node(ranked_nodes[i], phases, x, y)
         end
     record_node!(searched_node, ranked_nodes[1:num_search])
     end
@@ -221,6 +218,7 @@ function matching_pursuit(cadidate_nodes::AbstractVector{<:Node},
     return cos_angle(recon_sum, y)
 end
 
+# TODO: Wrong implementation after second level
 function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
                         phase_ids::AbstractVector)
     node_indices = Vector{Int}()
@@ -309,7 +307,7 @@ function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 				  	   y::AbstractVector, std_noise::Real)
 	residual = copy(y)
 	cps = node.current_phases
-	res!(cps, θ, x, residual)
+	evaluate_residual!(cps, θ, x, residual)
 	residual ./= std_noise
 	return sum(abs2, residual)
 end

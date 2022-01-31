@@ -4,13 +4,13 @@ using CrystalTree: bestfirstsearch, res_bfs, find_first_unassigned
 using CrystalTree: get_all_child_node_ids, get_ids, get_all_child_node
 using Test
 using CrystalShift
-using CrystalShift: CrystalPhase, optimize!
+using CrystalShift: CrystalPhase, optimize!, Lorentz
 using LinearAlgebra
 
 
 std_noise = .05
-mean_θ = [1., 1e-4, .2]
-std_θ = [.2, 100, 1.]
+mean_θ = [1., 1., .2]
+std_θ = [.2, 5., 1.]
 
 # CrystalPhas object creation
 path = "../data/"
@@ -28,7 +28,7 @@ if s[end] == ""
 end
 
 cs = Vector{CrystalPhase}(undef, size(s))
-@. cs = CrystalPhase(String(s))
+@. cs = CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
 println("$(size(cs, 1)) phase objects created!")
 tree = Tree(cs[1:15], 3)
 x = collect(8:.035:45)
@@ -40,9 +40,11 @@ end
 
 y ./= maximum(y)
 
-result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 40,
-                        maxiter=16, regularization=true) # should return a bunch of node
-@test argmin([norm(result[i](x).-y) for i in eachindex(result[1:94])]) == 16
+result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
+                        maxiter=64, regularization=true) # should return a bunch of node
+min_node = argmin([norm(result[i](x).-y) for i in eachindex(result[1:54])])
+println(min_node)
+@test Set([result[min_node].current_phases[i].id for i in eachindex(result[min_node].current_phases)]) == Set([1,2])
 
 result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 20,
                         maxiter=1000, regularization=true) # should return a bunch of node

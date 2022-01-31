@@ -2,17 +2,17 @@ module Testprobabilitic
 using Test
 using CrystalTree
 using CrystalTree: approximate_negative_log_evidence
-using CrystalTree: bestfirstsearch, find_first_unassigned
+using CrystalTree: bestfirstsearch, find_first_unassigned, get_phase_ids, res_bfs
 using CrystalShift
-using CrystalShift: CrystalPhase, optimize!, get_free_params
-using CrystalShift: extend_priors, res!, reconstruct!
+using CrystalShift: CrystalPhase, optimize!, get_free_params, Lorentz
+using CrystalShift: extend_priors, evaluate_residual!, evaluate!
 using ProgressBars
 using LinearAlgebra
 
 
 std_noise = 1e-2
-mean_θ = [1., 1e-3, .1] 
-std_θ = [0.05, 10., .1]
+mean_θ = [1., 1., .1] 
+std_θ = [0.05, 5., .1]
 
 # CrystalPhas object creation
 path = "../data/"
@@ -30,7 +30,7 @@ if s[end] == ""
 end
 
 cs = Vector{CrystalPhase}(undef, size(s))
-@. cs = CrystalPhase(String(s))
+@. cs = CrystalPhase(String(s), (0.1,), (Lorentz(),))
 max_num_phases = 3
 tree = Tree(cs[1:15], max_num_phases)
 x = collect(8:.035:45)
@@ -47,7 +47,7 @@ y /= maximum(y)
 
 method = LM
 objective = "LS"
-result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 15,
+result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 15,
                         method=method, objective = objective,
                         maxiter=1000, regularization=true)
 
@@ -56,14 +56,16 @@ num_nodes = find_first_unassigned(result) - 1
 prob = zeros(num_nodes)
 for i in 1:num_nodes
     θ = get_free_params(result[i].current_phases)
-    orig = [p.origin_cl for p in result[i].current_phases]
-    full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, orig)
+    # orig = [p.origin_cl for p in result[i].current_phases]
+    full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].current_phases)
     prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective)
 end
 
 i_min = argmin(prob)
-i_truth = 16
-@test i_min == i_truth
+
+true_phase_ids = Set([0,1])
+phase_ids = Set(get_phase_ids(result[i_min]))
+@test phase_ids == true_phase_ids
 
 end # Testprobabilitic module
 

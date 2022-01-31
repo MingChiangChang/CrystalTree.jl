@@ -6,7 +6,7 @@
 using Combinatorics
 using LinearAlgebra
 using Base.Threads
-using CrystalShift: reconstruct!
+using CrystalShift: evaluate!
 
 struct Tree{T, CP<:AbstractVector{T}, DP<:Int}
     nodes::CP

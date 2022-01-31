@@ -68,7 +68,7 @@ function kl_objective(phases::AbstractVector, log_θ::AbstractVector,
 	                  x::AbstractVector, y::AbstractVector,
 					  mean_log_θ::AbstractVector, std_θ::AbstractVector, λ::Real)
 	θ = exp.(log_θ)
-	r_θ = reconstruct!(phases, θ, x) # reconstruction of phases, IDEA: pre-allocate result (one for Dual, one for Float)
+	r_θ = evaluate!(phases, θ, x) # reconstruction of phases, IDEA: pre-allocate result (one for Dual, one for Float)
 	r_θ ./= exp(1) # since we are not normalizing the inputs, this rescaling has the effect that kl(α*y, y) has the optimum at α = 1
 	kl(r_θ, y) + λ * ls_regularizer(log_θ, mean_log_θ, std_θ)
 end
