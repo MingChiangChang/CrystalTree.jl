@@ -64,18 +64,20 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
                          max_search::Int;
                          method::OptimizationMethods = LM, objective::String = "LS",
                          maxiter::Int=32, regularization::Bool=false, tol::Real = DEFAULT_TOL)
-    searched_node = Vector{Node}(undef, max_search*tree.depth)
+    first_level_nodes = get_nodes_at_level(tree.nodes, 1)
+    num_of_phases = size(first_level_nodes, 1)
+    searched_node = Vector{Node}(undef, num_of_phases + max_search*(tree.depth-1) )
 
     for level in 1:tree.depth
 
         if level != 1
             ranked_nodes = rank_nodes_at_level(tree, level, searched_node, y)
+            num_search = min(max_search, size(ranked_nodes, 1))
         else
-            ranked_nodes = get_nodes_at_level(tree.nodes, level)
+            ranked_nodes = first_level_nodes
+            num_search = num_of_phases
         end
         
-        num_search = min(max_search, size(ranked_nodes, 1))
-
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
                   mean_θ, std_θ, method=method, objective=objective, maxiter=maxiter, regularization=regularization)
@@ -132,13 +134,18 @@ function res_bfs(tree::Tree, x::AbstractVector, y::AbstractVector,
     std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
     max_search::Int; method::OptimizationMethods = LM, objective::String = "LS",
     maxiter::Int=32, regularization::Bool=false) 
-    
-    searched_node = Vector{Node}(undef, max_search*tree.depth) # to store results
+    first_level_nodes = get_nodes_at_level(tree.nodes, 1)
+    num_of_phases = size(first_level_nodes, 1)
+    searched_node = Vector{Node}(undef, num_of_phases + max_search*(tree.depth-1) )
 
     for level in 1:tree.depth
-        ranked_nodes = rank_nodes_with_res_at_level(tree, level, x, max_search)
-
-        num_search = min(max_search, size(ranked_nodes, 1))
+        if level != 1
+            ranked_nodes = rank_nodes_with_res_at_level(tree, level, x, max_search)
+            num_search = min(max_search, size(ranked_nodes, 1))
+        else
+            ranked_nodes = first_level_nodes
+            num_search = num_of_phases
+        end
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,

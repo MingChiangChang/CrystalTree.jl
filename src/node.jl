@@ -135,7 +135,7 @@ function get_node_with_id(nodes::AbstractVector, ids::AbstractVector{<:Int})
 			push!(indices, i)
 		end
 	end
-	println(indices)
+
 	return @view nodes[indices]
 end
 

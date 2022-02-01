@@ -40,13 +40,13 @@ end
 
 y ./= maximum(y)
 
-result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 20,
+result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 10,
                         maxiter=64, regularization=true) # should return a bunch of node
-min_node = argmin([norm(result[i](x).-y) for i in eachindex(result[1:54])])
-println(min_node)
+ind = find_first_unassigned(result) - 1
+min_node = argmin([norm(result[i](x).-y) for i in eachindex(result[1:ind])])
 @test Set([result[min_node].current_phases[i].id for i in eachindex(result[min_node].current_phases)]) == Set([1,2])
 
-result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 20,
+result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 10,
                         maxiter=1000, regularization=true) # should return a bunch of node
 
 # print("done")
