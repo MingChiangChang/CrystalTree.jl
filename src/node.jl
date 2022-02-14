@@ -26,8 +26,6 @@ function Node(CPs::AbstractVector{<:CrystalPhase},
 end
 
 
-(node::Node)(x::AbstractVector) = node.current_phases.(x)
-
 Base.getindex(n::Node, i::Int) = Base.getindex(n.current_phases, i)
 Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]
 

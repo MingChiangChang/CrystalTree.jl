@@ -10,7 +10,7 @@ function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::Ab
 			function (log_θ)
 				ls_objective(node.current_phases, log_θ, x, y, std_noise, mean_log_θ, std_θ)
 			end
-		else objective = "KL"
+		elseif objective == "KL"
 			function (log_θ)
 				kl_objective(node.current_phases, log_θ, x, y, mean_log_θ, std_θ, λ)
 			end
