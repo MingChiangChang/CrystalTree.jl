@@ -33,7 +33,7 @@ function Node(node::Node, phases::AbstractVector{<:CrystalPhase},
 	          x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
     check_same_phase(node, phases) || error("Phases must be the same as in the node")
     recon = phases.(x)
-	Node(node.current_phases, node.child_node, node.id, 
+	Node(phases, node.child_node, node.id, 
 	     recon, y.-recon, cos_angle(recon, y), isOptimized)
 end
 
