@@ -1,6 +1,6 @@
 module Testtree
 using CrystalTree
-using CrystalTree: search!, bft, pos_res_thresholding, get_level
+using CrystalTree: search!, bft, pos_res_thresholding, get_level, get_phase_ids
 using DelimitedFiles
 using LinearAlgebra
 using Test
@@ -52,7 +52,7 @@ residual = Float64[]
 ind = argmin([norm(i(x)-y) for i in res])
 
 @testset "Basic tree search with trimming" begin
-    @test Set([res[ind].current_phases[i].id for i in eachindex(res[ind].current_phases)]) == Set([1, 2]) 
+    @test Set(get_phase_ids(res[ind])) == Set([1, 2]) 
 end
 
 end # module

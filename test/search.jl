@@ -1,7 +1,7 @@
 module Testsearch
 using CrystalTree
 using CrystalTree: bestfirstsearch, res_bfs, find_first_unassigned
-using CrystalTree: get_all_child_node_ids, get_ids, get_all_child_node
+using CrystalTree: get_all_child_node_ids, get_ids, get_all_child_node, get_phase_ids
 using Test
 using CrystalShift
 using CrystalShift: CrystalPhase, optimize!, Lorentz
@@ -34,7 +34,7 @@ tree = Tree(cs[1:15], 3)
 x = collect(8:.035:45)
 y = zero(x)
 for node in tree.nodes[2:3]
-    node.current_phases(x, y)
+    node.phase_model(x, y)
 end
 
 
@@ -44,7 +44,7 @@ result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 10,
                         maxiter=64, regularization=true) # should return a bunch of node
 ind = find_first_unassigned(result) - 1
 min_node = argmin([norm(result[i](x).-y) for i in eachindex(result[1:ind])])
-@test Set([result[min_node].current_phases[i].id for i in eachindex(result[min_node].current_phases)]) == Set([1,2])
+@test Set(get_phase_ids(result[min_node])) == Set([1,2])
 
 result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 10,
                         maxiter=1000, regularization=true) # should return a bunch of node
@@ -61,6 +61,6 @@ last_ind = find_first_unassigned(result) - 1
 
 res = [norm(result[i](x).-y) for i in 1:last_ind]
 ind = argmin(res)
-@test Set([result[ind].current_phases[i].id for i in eachindex(result[ind].current_phases)]) == Set([0, 1]) 
+@test Set(get_phase_ids(result[ind])) == Set([0, 1]) 
 
 end # module

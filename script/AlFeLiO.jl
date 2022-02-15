@@ -55,10 +55,10 @@ for y in ProgressBar(eachcol(data.I[:,1:1]))
     prob = zeros(num_nodes)
 
     for i in 1:num_nodes
-        θ = get_free_params(result[i].current_phases)
-        orig = [p.origin_cl for p in result[i].current_phases]
-        # reconstruction[:, i] = reconstruct!(result[i].current_phases, θ, x, zero(x))
-        full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].current_phases)
+        θ = get_free_params(result[i].phase_model)
+        orig = [p.origin_cl for p in result[i].phase_model]
+        # reconstruction[:, i] = reconstruct!(result[i].phase_model, θ, x, zero(x))
+        full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].phase_model)
         # num_of_params[i] = length(θ)
         prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective, true)
         # residual_norm[i] = norm(y - reconstruction[:, i])
