@@ -14,6 +14,7 @@ export Node, Tree
 include("util.jl")
 include("node.jl")
 include("tree.jl")
+include("lazytree.jl")
 include("search.jl")
 include("probabilistic.jl")
 
