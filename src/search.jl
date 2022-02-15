@@ -13,7 +13,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 
         @threads for i in eachindex(nodes)
             
-            phases = optimize!(nodes[i].current_phases, x, y, std_noise,
+            phases = optimize!(nodes[i].phase_model, x, y, std_noise,
                               mean, std, method=LM,
                               maxiter=maxiter,
                               regularization=regularization)
@@ -38,7 +38,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     node_order = traversal_func(t)
 
     @threads for node in node_order
-        @time optimize!(node.current_phases, x, y, std_noise, mean, std,
+        @time optimize!(node.phase_model, x, y, std_noise, mean, std,
                         method=LM, maxiter=maxiter, regularization=regularization)
     end
 
@@ -53,6 +53,10 @@ function pos_res_thresholding(phases::AbstractVector{<:CrystalPhase},
     end
     residual = norm(max.(recon-y, 0))
     return residual > tol
+end
+
+function pos_res_thresholding(PM::PhaseModel, x::AbstractVector, y::AbstractVector, tol::Real)
+    pos_res_thresholding(PM.CPs, x, y, tol)
 end
 
 """
@@ -79,7 +83,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
         end
         
         @threads for i in 1:num_search
-            phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
+            phases = optimize!(ranked_nodes[i].phase_model, x, y, std_noise,
                   mean_θ, std_θ, method=method, objective=objective, maxiter=maxiter, regularization=regularization)
             ranked_nodes[i] = Node(ranked_nodes[i], phases, x, y)
         end
@@ -103,7 +107,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
         num_search = min(max_search[level], size(ranked_nodes, 1))
 
         @threads for i in 1:num_search
-            phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
+            phases = optimize!(ranked_nodes[i].phase_model, x, y, std_noise,
                                mean_θ, std_θ,
                                method=method, objective = objective,
                                maxiter=maxiter, regularization=regularization)
@@ -148,7 +152,7 @@ function res_bfs(tree::Tree, x::AbstractVector, y::AbstractVector,
         end
 
         @threads for i in 1:num_search
-            phases = optimize!(ranked_nodes[i].current_phases, x, y, std_noise,
+            phases = optimize!(ranked_nodes[i].phase_model, x, y, std_noise,
             mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
             ranked_nodes[i] = Node(ranked_nodes[i], phases, x, y)
         end
@@ -165,7 +169,7 @@ function rank_nodes_with_res_at_level(tree::Tree, level::Int, x::AbstractVector,
         
         for node in optimized_nodes_from_previous_level
             for cn in node.child_node
-                cn = Node(cn.current_phases, cn.child_node, cn.id, cn.recon, cn.residual, 
+                cn = Node(cn.phase_model, cn.child_node, cn.id, cn.recon, cn.residual, 
                 cos_angle(cn(x), node.residual),
                 false)
             end
@@ -245,7 +249,7 @@ end
 
 function find_ref_nodes(candidate_nodes::AbstractVector{<:Node},
                         node::Node)
-    phase_ids = [p.id for p in node.current_phases]
+    phase_ids = [p.id for p in node.phase_model]
     find_ref_nodes(candidate_nodes, phase_ids)
 end
 
@@ -314,14 +318,14 @@ const RealOrVec = Union{Real, AbstractVector{<:Real}}
 function sos_objective(node::Node, θ::AbstractVector, x::AbstractVector,
 				  	   y::AbstractVector, std_noise::Real)
 	residual = copy(y)
-	cps = node.current_phases
+	cps = node.phase_model
 	evaluate_residual!(cps, θ, x, residual)
 	residual ./= std_noise
 	return sum(abs2, residual)
 end
 
 function regularizer(node::Node, θ::AbstractVector, mean_θ::RealOrVec, std_θ::Real)
-    θ_c = remove_act_from_θ(θ, node.current_phases)
+    θ_c = remove_act_from_θ(θ, node.phase_model)
 	par = @. (θ_c - mean_θ) / std_θ
 	sum(abs2, par)
 end
@@ -345,7 +349,7 @@ function leveled_residual(nodes::AbstractVector{<:Node},
     residuals = [norm(node.recon - y) for node in nodes]
 
     #residuals = [total_loss(node.recon - y) for node in nodes]
-    level = [size(node.current_phases, 1) for node in nodes]
+    level = [size(node.phase_model, 1) for node in nodes]
     depth = length(Set(level))
 
     minimum_node_idx = Int64[]

@@ -98,16 +98,16 @@ for i in tqdm(1:size(data, 1)) # size(data, 1)
         # display(plt)
 
         # print(result_node)
-        # for p in result_node.current_phases
+        # for p in result_node.phase_model
         #     println(p)
         # end
 
         plt = plot(q[i,:], new, xtickfontsize=10, ytickfontsize=10, lw=4, label="Diffraction")
         n = ""
-        # for p in result_node.current_phases
+        # for p in result_node.phase_model
         #     n = n * p.name * "\n"
         # end
-        for p in result_node.current_phases
+        for p in result_node.phase_model
             plot!(q[i, :], p.(q[i, :]), label=p.name, ylims=(0.0, 1.0), lw=2)
         end
         title!("$(condition) $(j)")
@@ -116,7 +116,7 @@ for i in tqdm(1:size(data, 1)) # size(data, 1)
         savefig("figures/$(condition) $(j).png")
 
         stripe[j] =  [ PhaseResult(p.cl, p.name, BH[j, :], new, isCenter[j])
-                      for p in result_node.current_phases]
+                      for p in result_node.phase_model]
     end
     subdf = df[(df.xcenter .== conds[i][1]) .& (df.ycenter .== conds[i][2]), :]
     local ta = subdf[!, "Ta.nmol_offgrid"]

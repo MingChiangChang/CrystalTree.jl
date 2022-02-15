@@ -1,4 +1,4 @@
-module Testprobabilitic
+module Testprobabilistic
 using Test
 using CrystalTree
 using CrystalTree: approximate_negative_log_evidence
@@ -37,7 +37,7 @@ x = collect(8:.035:45)
 y = zero(x)
 
 for node in tree.nodes[2:3]
-    node.current_phases(x, y)
+    node.phase_model(x, y)
 end
 
 noise = rand(size(x, 1))
@@ -55,9 +55,9 @@ num_nodes = find_first_unassigned(result) - 1
 
 prob = zeros(num_nodes)
 for i in 1:num_nodes
-    θ = get_free_params(result[i].current_phases)
-    # orig = [p.origin_cl for p in result[i].current_phases]
-    full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].current_phases)
+    θ = get_free_params(result[i].phase_model)
+    # orig = [p.origin_cl for p in result[i].phase_model]
+    full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].phase_model.CPs)
     prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective)
 end
 
@@ -67,5 +67,5 @@ true_phase_ids = Set([0,1])
 phase_ids = Set(get_phase_ids(result[i_min]))
 @test phase_ids == true_phase_ids
 
-end # Testprobabilitic module
+end # Testprobabilistic module
 

@@ -25,7 +25,7 @@ cs = Vector{CrystalPhase}(undef, size(s))
 println("$(size(cs, 1)) phase objects created!")
 
 # Creating objects for testing
-root = Node{CrystalPhase}()
+root = Node()
 node1 = Node(cs[1], 2)
 node2 = Node([cs[1], cs[2]], 3)
 node3 = Node([cs[1], cs[2]], 4)

@@ -8,14 +8,16 @@ function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::Ab
 	mean_log_θ = log.(mean_θ)
 	f = if objective == "LS"
 			function (log_θ)
-				ls_objective(node.current_phases, log_θ, x, y, std_noise, mean_log_θ, std_θ)
+				ls_objective(node.phase_model, log_θ, x, y, std_noise, mean_log_θ, std_θ)
 			end
 		elseif objective == "KL"
 			function (log_θ)
-				kl_objective(node.current_phases, log_θ, x, y, mean_log_θ, std_θ, λ)
+				kl_objective(node.phase_model, log_θ, x, y, mean_log_θ, std_θ, λ)
 			end
 		end
-	log_θ = log.(θ)
+
+	θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)]) # tramsform to log space for better conditioning
+	log_θ = θ
 	newton!(f, log_θ)
 	return approximate_negative_log_evidence(f, log_θ, verbose)
 end
@@ -50,16 +52,16 @@ function newton!(f, θ::AbstractVector; min_step::Real = 1e-10, maxiter::Int = 1
 end
 
 # TODO: move these into optimize.jl in CrystalShift, to make everything cleaner
-function ls_objective(phases::AbstractVector, log_θ::AbstractVector,
-	                  x::AbstractVector, y::AbstractVector, std_noise::RealOrVec,
-					  mean_log_θ::AbstractVector, std_θ::AbstractVector)
-	ls_residual(phases, log_θ, x, y, std_noise) + ls_regularizer(log_θ, mean_log_θ, std_θ)
+function ls_objective(PM::PhaseModel, log_θ::AbstractVector,
+					x::AbstractVector, y::AbstractVector, std_noise::RealOrVec,
+					mean_log_θ::AbstractVector, std_θ::AbstractVector)
+	ls_residual(PM, log_θ, x, y, std_noise) + ls_regularizer(PM, log_θ, mean_log_θ, std_θ)
 end
 
-function ls_residual(phases::AbstractVector, log_θ::AbstractVector, x::AbstractVector,
+function ls_residual(PM::PhaseModel, log_θ::AbstractVector, x::AbstractVector,
 	                 y::AbstractVector, std_noise::RealOrVec)
 	r = zeros(promote_type(eltype(log_θ), eltype(x), eltype(y)), length(x))
-	r = _residual!(phases, log_θ, x, y, r, std_noise)
+	r = _residual!(PM, log_θ, x, y, r, std_noise)
 	return sum(abs2, r)
 end
 
@@ -73,10 +75,14 @@ function kl_objective(phases::AbstractVector, log_θ::AbstractVector,
 	kl(r_θ, y) + λ * ls_regularizer(log_θ, mean_log_θ, std_θ)
 end
 
-function ls_regularizer(log_θ::AbstractVector, mean_log_θ::AbstractVector, std_θ::AbstractVector)
+function ls_regularizer(PM::PhaseModel, log_θ::AbstractVector, mean_log_θ::AbstractVector, std_θ::AbstractVector)
 	p = zero(eltype(log_θ))
-	@inbounds @simd for i in eachindex(log_θ)
+	bg_param_num = get_param_nums(PM.background)
+	θ_cp = log_θ[1:end - bg_param_num ]
+	θ_bg = log_θ[end - bg_param_num + 1 : end]
+	@inbounds @simd for i in eachindex(θ_cp)
 		p += ((log_θ[i] - mean_log_θ[i]) / (sqrt(2)*std_θ[i]))^2
 	end
+	p += _prior(PM.background, θ_bg)
 	return p
 end

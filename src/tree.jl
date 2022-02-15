@@ -13,11 +13,15 @@ struct Tree{T, CP<:AbstractVector{T}, DP<:Int}
     depth::DP # Store for convenience
 end
 
+# function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int;
+# 	         x::AbstractVector=[], include_background::Bool=false)
+    
+# end
+
 function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int)
     # Construct tree with certain depth
-	T = eltype(phases)
-    nodes = Node{<:T}[]
-	root = Node{T}()
+    nodes = Node[]
+	root = Node()
 	push!(nodes, root)
 
 	id = 2
