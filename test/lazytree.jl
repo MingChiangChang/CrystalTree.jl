@@ -2,7 +2,7 @@ using CrystalShift
 using CrystalTree
 using CrystalTree: Lazytree, get_phase_ids
 using CrystalTree: add_phase, create_child_nodes, attach_child_nodes!, expand!
-using CrystalTree: search!
+using CrystalTree: search!, search_k2n!
 using DelimitedFiles
 using LinearAlgebra
 using Test
@@ -14,7 +14,7 @@ using Test
 
 std_noise = .01
 mean_θ = [1., 1., .2]
-std_θ = [.5, 0.5, 1.]
+std_θ = [.5, .5, 1.]
 
 # CrystalPhas object creation
 path = "data/"
@@ -32,9 +32,9 @@ if s[end] == ""
 end
 
 cs = Vector{CrystalPhase}(undef, size(s))
-@. cs = CrystalPhase(String(s), (0.1, ), (PseudoVoigt(0.5), ))
+@. cs = CrystalPhase(String(s), (0.1, ), (Lorentz(), )) # For ease of testing fast
 
-x = LinRange(8, 45, 1024)
+x = LinRange(8, 45, 512)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
 
@@ -50,10 +50,13 @@ test_pm2 = add_phase(test_pm1, cs[2])
 child_nodes = create_child_nodes(LT, LT.nodes[1], 1)
 @test get_phase_ids.(child_nodes) == [[i] for i in 0:14]
 attach_child_nodes!(LT.nodes[1], child_nodes)
-@test get_phase_ids.(LT.nodes[1].child_node) == [[i] for i in 0:14]
+#@test get_phase_ids.(LT.nodes[1].child_node) == [[i] for i in 0:14]
 push!(LT.nodes, child_nodes...)
 t = expand!(LT, LT.nodes[1].child_node[2])
 
-LT = Lazytree(cs, 2, collect(x))
+LT = Lazytree(cs, 3, collect(x))
 
-@time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ, maxiter=32, regularization=true)
+# @time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
+#                   maxiter=64, regularization=true)
+# println("tt")
+@time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true)

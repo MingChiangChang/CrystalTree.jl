@@ -32,7 +32,7 @@ function Node(PM::PhaseModel, child_nodes::AbstractVector,
 	Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
 
-
+Base.size(node::Node) = size(node.phase_model.CPs)
 Base.getindex(n::Node, i::Int) = Base.getindex(n.phase_model, i)
 Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]
 get_phase_ids(n::Node) = get_phase_ids(n.phase_model)
