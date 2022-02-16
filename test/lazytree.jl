@@ -2,9 +2,11 @@ using CrystalShift
 using CrystalTree
 using CrystalTree: Lazytree, get_phase_ids
 using CrystalTree: add_phase, create_child_nodes, attach_child_nodes!, expand!
+using CrystalTree: search!
 using DelimitedFiles
 using LinearAlgebra
 using Test
+using BenchmarkTools
 
 using CrystalShift: CrystalPhase, optimize!, Lorentz, PseudoVoigt
 
@@ -38,16 +40,20 @@ y /= max(y...)
 
 LT = Lazytree(cs, 2, collect(x))
 
-# test_pm1 = add_phase(LT.nodes[1].phase_model, cs[1])
-# test_pm2 = add_phase(test_pm1, cs[2])
+test_pm1 = add_phase(LT.nodes[1].phase_model, cs[1])
+test_pm2 = add_phase(test_pm1, cs[2])
 
 
-# @test test_pm1.CPs[1] == cs[1]
-# @test test_pm2.CPs == cs[1:2]
+@test test_pm1.CPs[1] == cs[1]
+@test test_pm2.CPs == cs[1:2]
 
-# child_nodes = create_child_nodes(LT.nodes[1], cs, 1)
-# @test get_phase_ids.(child_nodes) == [[i] for i in 0:14]
-# attach_child_nodes!(LT.nodes[1], child_nodes)
-# @test get_phase_ids.(LT.nodes[1].child_node) == [[i] for i in 0:14]
-# push!(LT.nodes, child_nodes...)
-# t = expand!(LT, LT.nodes[1].child_node[2], cs)
+child_nodes = create_child_nodes(LT, LT.nodes[1], 1)
+@test get_phase_ids.(child_nodes) == [[i] for i in 0:14]
+attach_child_nodes!(LT.nodes[1], child_nodes)
+@test get_phase_ids.(LT.nodes[1].child_node) == [[i] for i in 0:14]
+push!(LT.nodes, child_nodes...)
+t = expand!(LT, LT.nodes[1].child_node[2])
+
+LT = Lazytree(cs, 2, collect(x))
+
+@time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ, maxiter=32, regularization=true)
