@@ -71,7 +71,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
 
     for level in 1:LT.depth
         nodes = get_nodes_at_level(LT, level)
-        println(length(nodes))
+        # println(length(nodes))
         level_result = Vector{Node}(undef, length(nodes))
 
         @threads for i in eachindex(nodes)
@@ -118,7 +118,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
                 maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
     #println("size: $(size(node))")
     if size(node)[1] == LT.depth
-        println("reach node $(get_phase_ids(node))")
+        # println("reach node $(get_phase_ids(node))")
         push!(result, node)
         return
     end
@@ -126,7 +126,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
     child_nodes = expand!(LT, node)
 
     @threads for i in eachindex(child_nodes)
-        println(i)
+        # println(i)
         pm = optimize!(child_nodes[i].phase_model, x, y, std_noise, mean, std,
                           method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
         child_nodes[i] = Node(child_nodes[i], pm, x, y, true)

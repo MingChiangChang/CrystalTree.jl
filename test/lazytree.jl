@@ -5,8 +5,6 @@ using CrystalTree: add_phase, create_child_nodes, attach_child_nodes!, expand!
 using CrystalTree: search!, search_k2n!
 using DelimitedFiles
 using LinearAlgebra
-using Test
-using BenchmarkTools
 
 using CrystalShift: CrystalPhase, optimize!, Lorentz, PseudoVoigt
 
@@ -17,7 +15,7 @@ mean_θ = [1., 1., .2]
 std_θ = [.5, .5, 1.]
 
 # CrystalPhas object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
