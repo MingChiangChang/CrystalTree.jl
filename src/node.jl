@@ -1,7 +1,7 @@
 # Do breadth-first-search
 # Recursive?
 
-struct Node{PM<:PhaseModel, CN<:AbstractVector,
+mutable struct Node{PM<:PhaseModel, CN<:AbstractVector,
 	        R<:AbstractVector, K<:AbstractVector, I<:Real}
 	phase_model::PM
 	child_node::CN
@@ -17,7 +17,7 @@ end
 Node() = Node(PhaseModel(), Node[], 1, Float64[], Float64[], 0., false) # Root
 Node(CP::CrystalPhase, id::Int) = Node(PhaseModel(CP), Node[], id, Float64[], Float64[], 0., false)
 Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(PhaseModel(CPs), Node[], id, Float64[], Float64[], 0., false)
-
+Node(PM::PhaseModel, id::Int) = Node(PM, Node[], id, Float64[], Float64[], 0., false)
 # TODO: Include background into PhaseModel
 # function Node(CPs::AbstractVector{<:CrystalPhase},
 # 	          child_nodes::AbstractVector,
@@ -32,7 +32,7 @@ function Node(PM::PhaseModel, child_nodes::AbstractVector,
 	Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
 
-
+Base.size(node::Node) = size(node.phase_model.CPs)
 Base.getindex(n::Node, i::Int) = Base.getindex(n.phase_model, i)
 Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]
 get_phase_ids(n::Node) = get_phase_ids(n.phase_model)
@@ -140,7 +140,6 @@ function remove_child!(parent::Node, child::Node)
 end
 
 get_level(node::Node) = size(node.phase_model)[1]
-get_phase_ids(node::Node) = [p.id for p in node.phase_model]
 get_inner(nodes::AbstractVector{<:Node}) = [node.inner for node in nodes]
 get_child_ids(node::Node) = [node.child_node[i].id for i in eachindex(node.child_node)]
 get_ids(nodes::AbstractVector{<:Node}) = [node.id for node in nodes]

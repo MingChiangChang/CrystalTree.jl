@@ -8,7 +8,9 @@ using LinearAlgebra
 using Base.Threads
 using CrystalShift: evaluate!
 
-struct Tree{T, CP<:AbstractVector{T}, DP<:Int}
+abstract type AbstractTree end
+
+struct Tree{T, CP<:AbstractVector{T}, DP<:Int} <: AbstractTree
     nodes::CP
     depth::DP # Store for convenience
 end
@@ -44,17 +46,17 @@ function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int)
 	Tree(nodes, depth)
 end
 
-Base.view(tree::Tree, i) = Base.view(tree.nodes, i)
-Base.size(t::Tree) = size(t.nodes)
-Base.size(t::Tree, dim::Int) = size(t.nodes, dim)
-Base.getindex(t::Tree, i::Int) = Base.getindex(t.nodes, i)
-Base.getindex(t::Tree, I::Vector{Int}) = [t[i] for i in I]
+Base.view(tree::AbstractTree, i) = Base.view(tree.nodes, i)
+Base.size(t::AbstractTree) = size(t.nodes)
+Base.size(t::AbstractTree, dim::Int) = size(t.nodes, dim)
+Base.getindex(t::AbstractTree, i::Int) = Base.getindex(t.nodes, i)
+Base.getindex(t::AbstractTree, I::Vector{Int}) = [t[i] for i in I]
 
-get_nodes_at_level(tree::Tree, level::Int) = get_nodes_at_level(tree.nodes, level)
-get_node_with_id(tree::Tree, id::Int) = get_node_with_id(tree.nodes, id)
-get_node_with_id(tree::Tree, ids::AbstractVector{<:Int}) = get_node_with_id(tree.nodes, ids)
+get_nodes_at_level(tree::AbstractTree, level::Int) = get_nodes_at_level(tree.nodes, level)
+get_node_with_id(tree::AbstractTree, id::Int) = get_node_with_id(tree.nodes, id)
+get_node_with_id(tree::AbstractTree, ids::AbstractVector{<:Int}) = get_node_with_id(tree.nodes, ids)
 
-function bft(t::Tree)
+function bft(t::AbstractTree)
     # Breadth-first traversal, return an array of
 	# Node with the b-f order
 	traversal = Int[]
@@ -68,7 +70,7 @@ function bft(t::Tree)
 	@view t[traversal]
 end
 
-bft(t::Tree, level::Int) = get_nodes_at_level(t.nodes, level)
+bft(t::AbstractTree, level::Int) = get_nodes_at_level(t.nodes, level)
 
 function dft(t::Tree)
     # Depth-first traversal, return an array of Node with
