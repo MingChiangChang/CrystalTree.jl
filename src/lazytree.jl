@@ -101,6 +101,14 @@ function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
     result = Vector{Node}()
     search_k2n!(result, LT, LT.nodes[1], x, y, k, std_noise, mean, std,
                maxiter=maxiter, regularization=regularization, tol=tol)
+    @threads for i in eachindex(result)
+        if !result[i].is_optimized
+            optimize!(result[i].phase_model, x, y, std_noise, mean, std,
+                          method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
+            result[i] = Node(result[i], pm, x, y, true)
+        end
+    end
+    result
 end
 
 # Doing a mixed version of depth-first search and breadth-first search
@@ -111,9 +119,6 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
     #println("size: $(size(node))")
     if size(node)[1] == LT.depth
         println("reach node $(get_phase_ids(node))")
-        pm = optimize!(node.phase_model, x, y, std_noise, mean, std,
-                          method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
-        node = Node(node, pm, x, y, true)
         push!(result, node)
         return
     end
@@ -125,8 +130,10 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
         pm = optimize!(child_nodes[i].phase_model, x, y, std_noise, mean, std,
                           method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
         child_nodes[i] = Node(child_nodes[i], pm, x, y, true)
-        push!(result, child_nodes[i])
     end
+
+    append!(result, child_nodes)
+
     top_k = get_top_ids(child_nodes, k)
     #println("ids: $(get_phase_ids.(top_k))")
     for j in eachindex(top_k)

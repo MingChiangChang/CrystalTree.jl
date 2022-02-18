@@ -50,13 +50,16 @@ test_pm2 = add_phase(test_pm1, cs[2])
 child_nodes = create_child_nodes(LT, LT.nodes[1], 1)
 @test get_phase_ids.(child_nodes) == [[i] for i in 0:14]
 attach_child_nodes!(LT.nodes[1], child_nodes)
-#@test get_phase_ids.(LT.nodes[1].child_node) == [[i] for i in 0:14]
+@test get_phase_ids.(LT.nodes[1].child_node) == [[i] for i in 0:14]
 push!(LT.nodes, child_nodes...)
 t = expand!(LT, LT.nodes[1].child_node[2])
 
-LT = Lazytree(cs, 3, collect(x))
+LT = Lazytree(cs, 2, collect(x))
 
 # @time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
 #                   maxiter=64, regularization=true)
 # println("tt")
-@time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true)
+@time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
+res = [norm(t[i](x).-y) for i in eachindex(t)]
+ind = argmin(res)
+@test Set(get_phase_ids(t[ind])) == Set([0, 1])
