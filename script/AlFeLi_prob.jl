@@ -2,8 +2,7 @@ using ProgressBars
 
 using CrystalTree
 using CrystalTree: bestfirstsearch, approximate_negative_log_evidence, find_first_unassigned
-using CrystalTree: Lazytree, search_k2n!, search!, precision, recall
-using CrystalTree: get_phase_number, get_ground_truth
+using CrystalTree: Lazytree, search_k2n!, search!, cast
 using CrystalShift
 using CrystalShift: get_free_params, extend_priors, Lorentz, evaluate_residual!, PseudoVoigt
 using CrystalShift: Gauss
@@ -13,11 +12,10 @@ using LinearAlgebra
 
 std_noise = 1e-2
 mean_θ = [1., 1., .1] # Set to favor true solution
-std_θ = [1., 1., 1.]
+std_θ = [0.05, 1., 1.]
 
 method = LM
 objective = "LS"
-improvement=0.3
 
 test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
 f = open(test_path, "r")
@@ -31,6 +29,17 @@ end
 if s[end] == ""
     pop!(s)
 end
+
+cs = Vector{CrystalPhase}(undef, size(s))
+cs = @. CrystalPhase(String(s), (0.1, ), (PseudoVoigt(0.5), ))
+# println("$(size(cs, 1)) phase objects created!")
+max_num_phases = 3
+data, _ = load("AlLiFe", "/Users/ming/Downloads/")
+x = data.Q
+x = x[1:400]
+
+
+result_node = Node[]
 
 function node_under_improvement_constraint(nodes, improvement, x, y)
     
@@ -46,27 +55,13 @@ function node_under_improvement_constraint(nodes, improvement, x, y)
     return  nodes[min_res[2]]
 end
 
-cs = Vector{CrystalPhase}(undef, size(s))
-cs = @. CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
-# println("$(size(cs, 1)) phase objects created!")
-max_num_phases = 3
-data, _ = load("AlLiFe", "/Users/ming/Downloads/")
-x = data.Q
-x = x[1:400]
-
-
-result_node = Node[]
-
 sol_path = "data/AlLiFeO/sol_new.txt"
 sol = open(sol_path, "r")
 
 t = split(read(sol, String), "\n")
 
-gt = get_ground_truth(t)
-println(gt)
-answer = Array{Int64}(undef, (length(t), 7))
 # for y in ProgressBar(eachcol(data.I[:,175:175]))
-for i in tqdm(eachindex(t[1:10, :]))
+for i in tqdm(eachindex(t[1:1]))
     solution = split(t[i], ",")
     col = parse(Int, solution[1])
     y = data.I[:,col]
@@ -77,36 +72,27 @@ for i in tqdm(eachindex(t[1:10, :]))
 
     result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
                         #method=method, objective = objective,
-                        maxiter=128, regularization=true) #, verbose = true) # should return a bunch of node
-    println("Done searching")
-    println(length(result[1]))
-    println(length(result[2]))
-    println(length(result[3]))
-    
-    best_node_at_each_level = Vector{Node}()
-    for j in 1:tree.depth
-        res = [norm(evaluate_residual!(result[j][k].phase_model, x, copy(y))) 
-               for k in eachindex(result[j])]
-        # println(res)
-        i_min = argmin(res)
-        push!(best_node_at_each_level, result[j][i_min])
-        plt = plot(x, y, label="Original", title="$(i)")
-        plot!(x, result[j][i_min](x), label="Optimized")
-        display(plt)
+                        maxiter=512, regularization=true) #, verbose = true) # should return a bunch of node
+    result = vcat(result...)
+    println(typeof(result))
+    println(size(result))
+    prob = Vector{Float64}(undef, length(result))
+    for i in eachindex(result)
+        θ = get_free_params(result[i].phase_model)
+        # orig = [p.origin_cl for p in result[i].phase_model]
+        # reconstruction[:, i] = reconstruct!(result[i].phase_model, θ, x, zero(x))
+        full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].phase_model.CPs)
+        # num_of_params[i] = length(θ)
+        prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective, true)
+        # residual_norm[i] = norm(y - reconstruction[:, i])
+        # plt = plot(x, y, label="Original")
+        # plot!(x, result[i](x), label="Optimized")
+        # display(plt)
     end
-    push!(result_node, node_under_improvement_constraint(best_node_at_each_level, improvement, x, y))
-end
 
-for i in eachindex(result_node)
-    re = zeros(Int64, 7)
-    for j in eachindex(result_node[i].phase_model.CPs)
-        re[get_phase_number(result_node[i].phase_model.CPs[j].name)] += 1
-    end
-    answer[i, :] = re 
-    println(t[i])
-    println("$(i): $(re)")
+    i_min = argmin(prob)
+    push!(result_node, result[i_min])
 end
-
 
 # println(result_node[1].phase_model)
 

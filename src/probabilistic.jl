@@ -18,7 +18,7 @@ function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::Ab
 
 	θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)]) # tramsform to log space for better conditioning
 	log_θ = θ
-	newton!(f, log_θ)
+	# newton!(f, log_θ)
 	return approximate_negative_log_evidence(f, log_θ, verbose)
 end
 
@@ -33,6 +33,7 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 		println("in approximate_negative_log_evidence")
 		display(eigvals(Matrix(Σ)))
 	end
+	println(val - (logdet(Σ) + d * log(2π)))
 	return val - (logdet(Σ) + d * log(2π)) # 
 end
 
