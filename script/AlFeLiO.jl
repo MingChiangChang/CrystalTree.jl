@@ -17,7 +17,7 @@ std_θ = [1., 1., 1.]
 
 method = LM
 objective = "LS"
-improvement=0.3
+improvement = 0.03
 
 test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
 f = open(test_path, "r")
@@ -49,7 +49,7 @@ end
 cs = Vector{CrystalPhase}(undef, size(s))
 cs = @. CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
 # println("$(size(cs, 1)) phase objects created!")
-max_num_phases = 3
+max_num_phases = 2
 data, _ = load("AlLiFe", "/Users/ming/Downloads/")
 x = data.Q
 x = x[1:400]
@@ -77,11 +77,10 @@ for i in tqdm(eachindex(t[1:10, :]))
 
     result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
                         #method=method, objective = objective,
-                        maxiter=128, regularization=true) #, verbose = true) # should return a bunch of node
+                        maxiter=512, regularization=true) #, verbose = true) # should return a bunch of node
     println("Done searching")
     println(length(result[1]))
     println(length(result[2]))
-    println(length(result[3]))
     
     best_node_at_each_level = Vector{Node}()
     for j in 1:tree.depth

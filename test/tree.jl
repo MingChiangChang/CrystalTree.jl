@@ -8,7 +8,7 @@ using Test
 using CrystalShift: CrystalPhase, optimize!, Lorentz, PseudoVoigt
 
 std_noise = .01
-mean_θ = [1., 1., .2]
+mean_θ = [1., 1., 1.]
 std_θ = [.5, 0.5, 1.]
 
 # CrystalPhas object creation
@@ -27,7 +27,7 @@ if s[end] == ""
 end
 
 cs = Vector{CrystalPhase}(undef, size(s))
-@. cs = CrystalPhase(String(s), (0.1, ), (PseudoVoigt(0.5), ))
+@. cs = CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
 
 x = LinRange(8, 45, 1024)
 y = cs[1].(x)+cs[2].(x)

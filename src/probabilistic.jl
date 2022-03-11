@@ -29,9 +29,18 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 	val = f(θ)
 	H = ForwardDiff.hessian(f, θ)
 	Σ = inverse(H) # reinterpret Hessian of minimization problem as inverse of covariance matrix
-	if verbose
-		println("in approximate_negative_log_evidence")
-		display(eigvals(Matrix(Σ)))
+	# if verbose
+	# println("in approximate_negative_log_evidence")
+	display(eigvals(Matrix(Σ)))
+	# display(Matrix(Σ))
+	# end
+	# println("val: $(val)")
+	# println("rest: $(logdet(Σ) + d * log(2π))")
+	try
+		logdet(Σ)
+	catch DomainError
+		println("negative det")
+		return 1e8
 	end
 	println(val - (logdet(Σ) + d * log(2π)))
 	return val - (logdet(Σ) + d * log(2π)) # 
@@ -40,11 +49,12 @@ end
 approximate_evidence(x...) = exp(-approximate_negative_log_evidence(x...))
 
 # undamped newton algorithm for fine-tuning
-function newton!(f, θ::AbstractVector; min_step::Real = 1e-10, maxiter::Int = 16)
+function newton!(f, θ::AbstractVector; min_step::Real = 1e-10, maxiter::Int = 5)
 	N = OptimizationAlgorithms.SaddleFreeNewton(f, θ)
 	d = OptimizationAlgorithms.direction(N, θ)
 	i = 1
 	while maximum(abs, d) > min_step * maximum(abs, θ) && i < maxiter
+		println(i)
 		OptimizationAlgorithms.update!(N, θ)
 		d = N.d
 		i += 1

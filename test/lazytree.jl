@@ -1,3 +1,4 @@
+module TestLazyTree
 using CrystalShift
 using CrystalTree
 using CrystalTree: Lazytree, get_phase_ids
@@ -52,7 +53,7 @@ attach_child_nodes!(LT.nodes[1], child_nodes)
 push!(LT.nodes, child_nodes...)
 t = expand!(LT, LT.nodes[1].child_node[2])
 
-LT = Lazytree(cs, 2, collect(x))
+LT = Lazytree(cs, 2, x)
 
 # @time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
 #                   maxiter=64, regularization=true)
@@ -61,3 +62,5 @@ LT = Lazytree(cs, 2, collect(x))
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
+
+end
