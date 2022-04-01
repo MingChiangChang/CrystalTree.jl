@@ -6,20 +6,21 @@ using CrystalTree: Lazytree, search_k2n!, search!, precision, recall
 using CrystalTree: get_phase_number, get_ground_truth
 using CrystalShift
 using CrystalShift: get_free_params, extend_priors, Lorentz, evaluate_residual!, PseudoVoigt
-using CrystalShift: Gauss
+using CrystalShift: Gauss, FixedPseudoVoigt
 using PhaseMapping: load
 using Plots
 using LinearAlgebra
 
 std_noise = 1e-2
 mean_θ = [1., 1., .1] # Set to favor true solution
-std_θ = [1., 1., 1.]
+std_θ = [0.2, .5, 1.]
 
 method = LM
 objective = "LS"
-improvement = 0.03
+improvement = 0.05
 
 test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
+# test_path = "/Users/ming/Downloads/cif/sticks.csv"
 f = open(test_path, "r")
 
 if Sys.iswindows()
@@ -47,9 +48,9 @@ function node_under_improvement_constraint(nodes, improvement, x, y)
 end
 
 cs = Vector{CrystalPhase}(undef, size(s))
-cs = @. CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
+cs = @. CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(0.01), ))
 # println("$(size(cs, 1)) phase objects created!")
-max_num_phases = 2
+max_num_phases = 3
 data, _ = load("AlLiFe", "/Users/ming/Downloads/")
 x = data.Q
 x = x[1:400]
@@ -66,7 +67,7 @@ gt = get_ground_truth(t)
 println(gt)
 answer = Array{Int64}(undef, (length(t), 7))
 # for y in ProgressBar(eachcol(data.I[:,175:175]))
-for i in tqdm(eachindex(t[1:10, :]))
+for i in tqdm(eachindex(t[1:1]))
     solution = split(t[i], ",")
     col = parse(Int, solution[1])
     y = data.I[:,col]
@@ -76,11 +77,11 @@ for i in tqdm(eachindex(t[1:10, :]))
     tree = Lazytree(cs, max_num_phases, x)
 
     result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
-                        #method=method, objective = objective,
-                        maxiter=512, regularization=true) #, verbose = true) # should return a bunch of node
+                        #smethod=method, objective = objective,
+                        maxiter=128, regularization=true) #, verbose = true) # should return a bunch of node
     println("Done searching")
     println(length(result[1]))
-    println(length(result[2]))
+    # println(length(result[2]))
     
     best_node_at_each_level = Vector{Node}()
     for j in 1:tree.depth
@@ -89,9 +90,9 @@ for i in tqdm(eachindex(t[1:10, :]))
         # println(res)
         i_min = argmin(res)
         push!(best_node_at_each_level, result[j][i_min])
-        plt = plot(x, y, label="Original", title="$(i)")
-        plot!(x, result[j][i_min](x), label="Optimized")
-        display(plt)
+        plt = plot(x, y)#, label="Original", title="$(i)")
+        # plot!(x, result[j][i_min](x), label="Optimized")
+        savefig("test.png")
     end
     push!(result_node, node_under_improvement_constraint(best_node_at_each_level, improvement, x, y))
 end

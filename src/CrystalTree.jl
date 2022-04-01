@@ -2,7 +2,7 @@ module CrystalTree
 using ForwardDiff
 using CrystalShift
 using CrystalShift: CrystalPhase, optimize!, _residual!, _prior, kl
-using CrystalShift: PhaseModel, get_param_nums
+using CrystalShift: PhaseModel, get_param_nums, full_optimize!
 
 import CrystalShift: get_phase_ids
 

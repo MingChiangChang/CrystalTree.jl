@@ -31,7 +31,7 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 	Σ = inverse(H) # reinterpret Hessian of minimization problem as inverse of covariance matrix
 	# if verbose
 	# println("in approximate_negative_log_evidence")
-	display(eigvals(Matrix(Σ)))
+	# display(eigvals(Matrix(Σ)))
 	# display(Matrix(Σ))
 	# end
 	# println("val: $(val)")
@@ -39,10 +39,10 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 	try
 		logdet(Σ)
 	catch DomainError
-		println("negative det")
+		# println("negative det")
 		return 1e8
 	end
-	println(val - (logdet(Σ) + d * log(2π)))
+	# println(val - (logdet(Σ) + d * log(2π)))
 	return val - (logdet(Σ) + d * log(2π)) # 
 end
 

@@ -24,6 +24,7 @@ function expand!(LT::Lazytree, node::Node, starting_id::Int)
     child_nodes = create_child_nodes(LT, node, starting_id)
     attach_child_nodes!(node, child_nodes)
     push!(LT.nodes, child_nodes...)
+    # println(Set.(get_phase_ids.(child_nodes))...) # TODO: This fails when k is larger than the number of phase
     push!(LT.phase_combinations, Set.(get_phase_ids.(child_nodes))...)
     return child_nodes
 end
@@ -74,8 +75,10 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
         # println(length(nodes))
         level_result = Vector{Node}(undef, length(nodes))
 
-        @threads for i in eachindex(nodes)
-            pm = optimize!(nodes[i].phase_model, x, y, std_noise, mean, std,
+        for i in eachindex(nodes)
+            # println([nodes[i].phase_model.CPs[j].name for j in eachindex(nodes[i].phase_model.CPs)])
+            # println(nodes[i].phase_model.background)
+            pm = full_optimize!(nodes[i].phase_model, x, y, std_noise, mean, std,
                            method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
             nodes[i] = Node(nodes[i], pm, x, y, true)
             level_result[i] = nodes[i]
@@ -83,7 +86,6 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
 
         push!(result, level_result)
         top_k = get_top_ids(result[level], k)
-
         if level != LT.depth
             for i in top_k
                 expand!(LT, i)
@@ -103,7 +105,7 @@ function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
                maxiter=maxiter, regularization=regularization, tol=tol)
     @threads for i in eachindex(result)
         if !result[i].is_optimized
-            @time optimize!(result[i].phase_model, x, y, std_noise, mean, std,
+            @time full_optimize!(result[i].phase_model, x, y, std_noise, mean, std,
                           method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
             result[i] = Node(result[i], pm, x, y, true)
         end
@@ -127,7 +129,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
 
     @threads for i in eachindex(child_nodes)
         # println(i)
-        @time pm = optimize!(child_nodes[i].phase_model, x, y, std_noise, mean, std,
+        @time pm = full_optimize!(child_nodes[i].phase_model, x, y, std_noise, mean, std,
                           method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
         child_nodes[i] = Node(child_nodes[i], pm, x, y, true)
     end
