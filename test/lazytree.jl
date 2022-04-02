@@ -16,7 +16,7 @@ mean_θ = [1., 1., .2]
 std_θ = [.5, .5, 1.]
 
 # CrystalPhas object creation
-path = "../data/"
+path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -37,7 +37,7 @@ x = LinRange(8, 45, 512)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
 
-LT = Lazytree(cs, 2, collect(x))
+LT = Lazytree(cs, 2, collect(x), s)
 
 test_pm1 = add_phase(LT.nodes[1].phase_model, cs[1])
 test_pm2 = add_phase(test_pm1, cs[2])
@@ -53,7 +53,7 @@ attach_child_nodes!(LT.nodes[1], child_nodes)
 push!(LT.nodes, child_nodes...)
 t = expand!(LT, LT.nodes[1].child_node[2])
 
-LT = Lazytree(cs, 2, x)
+LT = Lazytree(cs, 2, x, s)
 
 # @time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
 #                   maxiter=64, regularization=true)

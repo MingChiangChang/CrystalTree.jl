@@ -15,9 +15,57 @@ end
 
 # TODO: allow PM() to create empty phasemodel object
 Node() = Node(PhaseModel(), Node[], 1, Float64[], Float64[], 0., false) # Root
-Node(CP::CrystalPhase, id::Int) = Node(PhaseModel(CP), Node[], id, Float64[], Float64[], 0., false)
-Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(PhaseModel(CPs), Node[], id, Float64[], Float64[], 0., false)
-Node(PM::PhaseModel, id::Int) = Node(PM, Node[], id, Float64[], Float64[], 0., false)
+# Node(CP::CrystalPhase, id::Int) = Node(PhaseModel(CP), Node[], id, Float64[], Float64[], 0., false)
+# Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(PhaseModel(CPs), Node[], id, Float64[], Float64[], 0., false)
+# Node(PM::PhaseModel, id::Int) = Node(PM, Node[], id, Float64[], Float64[], 0., false)
+
+get_id(CP::CrystalPhase) = CP.id
+
+function Node(CP::CrystalPhase, _str::AbstractVector{<:AbstractString}, id::Int)
+	Node(_str[CP.id+1], id, CP.σ, CP.profile)
+end
+
+function Node(CPs::AbstractVector{<:CrystalPhase}, _str::AbstractVector{<:AbstractString}, id::Int)
+	Node(_str[get_id.(CPs).+1], id, CPs[1].σ, CPs[1].profile)
+end
+
+function Node(PM::PhaseModel, _str::AbstractVector{<:AbstractString}, id::Int)
+	Node(PhaseModel(CrystalPhase.(String.(_str[get_id.(PM.CPs).+1]),
+	                              (PM.CPs[1].σ, ), (PM.CPs[1].profile, )),
+								  PM.background),
+								  Node[], id, Float64[], Float64[], 0., false)
+end
+
+
+function Node(_str::String, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
+	Node(PhaseModel(CrystalPhase(String(_str), wid_init, profile)), Node[], id, Float64[], Float64[], 0., false)
+end
+
+function Node(_str::AbstractVector{<:AbstractString}, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
+	Node(PhaseModel(CrystalPhase.(String.(_str), (wid_init,), (profile,))), Node[], id, Float64[], Float64[], 0., false)
+end
+
+function Node(node::Node, phases::AbstractVector{<:CrystalPhase},
+			x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
+	check_same_phase(node, phases) || error("Phases must be the same as in the node")
+	recon = phases.(x)
+	Node(phases, node.child_node, node.id, 
+	     recon, y.-recon, cos_angle(recon, y), isOptimized)
+end
+
+function Node(node::Node, PM::PhaseModel,
+              x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
+	check_same_phase(node, PM) || error("Phases must be the same as in the node")
+	recon = PM(x)
+	Node(PM, node.child_node, node.id, 
+	recon, y.-recon, cos_angle(recon, y), isOptimized)
+end
+
+function Node(PM::PhaseModel, child_nodes::AbstractVector,
+		x::AbstractVector, y::AbstractVector)
+	recon = PM(x)
+	Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
+end
 # TODO: Include background into PhaseModel
 # function Node(CPs::AbstractVector{<:CrystalPhase},
 # 	          child_nodes::AbstractVector,
@@ -26,11 +74,7 @@ Node(PM::PhaseModel, id::Int) = Node(PM, Node[], id, Float64[], Float64[], 0., f
 #     Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 # end
 
-function Node(PM::PhaseModel, child_nodes::AbstractVector,
-	          x::AbstractVector, y::AbstractVector)
-    recon = PM(x)
-	Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
-end
+
 
 Base.size(node::Node) = size(node.phase_model.CPs)
 Base.getindex(n::Node, i::Int) = Base.getindex(n.phase_model, i)
@@ -38,21 +82,6 @@ Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]
 get_phase_ids(n::Node) = get_phase_ids(n.phase_model)
 
 
-function Node(node::Node, phases::AbstractVector{<:CrystalPhase},
-	          x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
-    check_same_phase(node, phases) || error("Phases must be the same as in the node")
-    recon = phases.(x)
-	Node(phases, node.child_node, node.id, 
-	     recon, y.-recon, cos_angle(recon, y), isOptimized)
-end
-
-function Node(node::Node, PM::PhaseModel,
-			x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
-	check_same_phase(node, PM) || error("Phases must be the same as in the node")
-	recon = PM(x)
-	Node(PM, node.child_node, node.id, 
-	     recon, y.-recon, cos_angle(recon, y), isOptimized)
-end
 
 function check_same_phase(node::Node, phases::AbstractVector{<:CrystalPhase})
 	check_same_phase(node.phase_model, phases)

@@ -2,16 +2,18 @@ struct Lazytree{NS<:AbstractVector{<:Node},
                 AS<:AbstractSet,
                 CP<:AbstractVector{<:CrystalPhase},
                 DP<:Int,
-                AR<:AbstractVector} <: AbstractTree
+                AR<:AbstractVector,
+                S<:AbstractVector{<:AbstractString}} <: AbstractTree
     nodes::NS
     phase_combinations::AS # Keeping track of phase combinations
     phases::CP
     depth::DP
     x::AR
+    _str::S
 end
 
-function Lazytree(CPs::AbstractVector{<:CrystalPhase}, depth::Int, x::AbstractVector)
-    Lazytree(Node[Node()], Set(), CPs, depth, x)
+function Lazytree(CPs::AbstractVector{<:CrystalPhase}, depth::Int, x::AbstractVector, _str::AbstractVector{<:AbstractString})
+    Lazytree(Node[Node()], Set(), CPs, depth, x, _str)
 end
 
 
@@ -41,7 +43,7 @@ function create_child_nodes(LT::Lazytree, node::Node, starting_id::Int)
     new_nodes = Node[]
     for i in eachindex(LT.phases)
         if is_allowed_new_phase(LT, node, LT.phases[i])
-            push!(new_nodes, Node(add_phase(node.phase_model, LT.phases[i]), starting_id+i-1))
+            push!(new_nodes, Node(add_phase(node.phase_model, LT.phases[i]), LT._str, starting_id+i-1))
         end
     end
     return new_nodes
@@ -75,7 +77,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
         # println(length(nodes))
         level_result = Vector{Node}(undef, length(nodes))
 
-        for i in eachindex(nodes)
+        @threads for i in eachindex(nodes)
             # println([nodes[i].phase_model.CPs[j].name for j in eachindex(nodes[i].phase_model.CPs)])
             # println(nodes[i].phase_model.background)
             pm = full_optimize!(nodes[i].phase_model, x, y, std_noise, mean, std,

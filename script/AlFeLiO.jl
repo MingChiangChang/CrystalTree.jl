@@ -17,14 +17,14 @@ std_θ = [0.2, .5, 1.]
 
 method = LM
 objective = "LS"
-improvement = 0.05
-
-test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
+improvement = 0.1
+test_path = "C:\\Users\\r2121\\Downloads\\AlLiFeO\\sticks.csv"
+# test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
 # test_path = "/Users/ming/Downloads/cif/sticks.csv"
 f = open(test_path, "r")
 
 if Sys.iswindows()
-    s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
+    s = split(read(f, String), "#\n") # Windows: #\r\n ...
 else
     s = split(read(f, String), "#\n")
 end
@@ -51,7 +51,8 @@ cs = Vector{CrystalPhase}(undef, size(s))
 cs = @. CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(0.01), ))
 # println("$(size(cs, 1)) phase objects created!")
 max_num_phases = 3
-data, _ = load("AlLiFe", "/Users/ming/Downloads/")
+# data, _ = load("AlLiFe", "/Users/ming/Downloads/")
+data, _ = load("AlLiFe", "C:\\Users\\r2121\\Downloads\\")
 x = data.Q
 x = x[1:400]
 
@@ -67,14 +68,14 @@ gt = get_ground_truth(t)
 println(gt)
 answer = Array{Int64}(undef, (length(t), 7))
 # for y in ProgressBar(eachcol(data.I[:,175:175]))
-for i in tqdm(eachindex(t[1:1]))
+for i in tqdm(eachindex(t))
     solution = split(t[i], ",")
     col = parse(Int, solution[1])
     y = data.I[:,col]
     y ./= maximum(y)
     y = y[1:400]
 
-    tree = Lazytree(cs, max_num_phases, x)
+    tree = Lazytree(cs, max_num_phases, x, s)
 
     result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
                         #smethod=method, objective = objective,
@@ -90,9 +91,9 @@ for i in tqdm(eachindex(t[1:1]))
         # println(res)
         i_min = argmin(res)
         push!(best_node_at_each_level, result[j][i_min])
-        plt = plot(x, y)#, label="Original", title="$(i)")
-        # plot!(x, result[j][i_min](x), label="Optimized")
-        savefig("test.png")
+        plt = plot(x, y, label="Original", title="$(i)")
+        plot!(x, result[j][i_min](x), label="Optimized")
+        display(plt)
     end
     push!(result_node, node_under_improvement_constraint(best_node_at_each_level, improvement, x, y))
 end
