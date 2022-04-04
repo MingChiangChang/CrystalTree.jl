@@ -26,10 +26,10 @@ println("$(size(cs, 1)) phase objects created!")
 
 # Creating objects for testing
 root = Node()
-node1 = Node(cs[1], 2)
-node2 = Node([cs[1], cs[2]], 3)
-node3 = Node([cs[1], cs[2]], 4)
-node4 = Node([cs[1], cs[2], cs[3]], 5)
+node1 = Node(cs[1], s, 2)
+node2 = Node([cs[1], cs[2]], s, 3)
+node3 = Node([cs[1], cs[2]], s, 4)
+node4 = Node([cs[1], cs[2], cs[3]], s, 5)
 
 add_child!(root, node1)
 add_child!(node1, node2)
