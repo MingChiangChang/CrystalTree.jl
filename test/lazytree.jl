@@ -58,7 +58,7 @@ LT = Lazytree(cs, 2, x, s)
 # @time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
 #                   maxiter=64, regularization=true)
 # println("tt")
-@time t = search!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
+@time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
