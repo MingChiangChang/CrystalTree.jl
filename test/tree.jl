@@ -35,7 +35,7 @@ y /= max(y...)
 
 # TODO: add unit test for smaller function
 
-a = Tree(cs, 2)
+a = Tree(cs, 2, s)
 
 traversal = bft(a)
 @testset "bft test" begin
@@ -52,7 +52,7 @@ residual = Float64[]
 ind = argmin([norm(i(x)-y) for i in res])
 
 @testset "Basic tree search with trimming" begin
-    @test Set(get_phase_ids(res[ind])) == Set([1, 2]) 
+    @test Set(get_phase_ids(res[ind])) == Set([0, 1]) 
 end
 
 end # module

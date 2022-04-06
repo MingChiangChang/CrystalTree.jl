@@ -32,7 +32,7 @@ end
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s), (0.1,), (Lorentz(),))
 max_num_phases = 3
-tree = Tree(cs[1:15], max_num_phases)
+tree = Tree(cs[1:15], max_num_phases, s)
 x = collect(8:.035:45)
 y = zero(x)
 

@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.1"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[PrettyTables]]
@@ -26,18 +26,18 @@ uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "56c347caf09ad8acb3e261fe75f8e09652b7b05b"
+git-tree-sha1 = "8b921542ad44cba67f1487e2226446597e0a90af"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "0.7.10"
+version = "0.8.5"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.BackgroundSubtraction]]
 deps = ["CovarianceFunctions", "Distributions", "KroneckerProducts", "LazyInverses", "LinearAlgebra", "SpecialFunctions", "Statistics", "Test"]
-git-tree-sha1 = "8358b788042ce647fecdf236a1eaffdae86c502b"
+git-tree-sha1 = "e277cf28ec882b502367a0d0611adfcdb931f771"
 uuid = "9977cdcb-3521-4027-9f3f-3caff6505f42"
-version = "1.0.0"
+version = "1.0.1"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -177,10 +177,10 @@ uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
 
 [[deps.CovarianceFunctions]]
-deps = ["BlockFactorizations", "DiffResults", "FillArrays", "ForwardDiff", "IterativeSolvers", "KroneckerProducts", "LazyArrays", "LinearAlgebra", "SparseArrays", "SpecialFunctions", "TaylorSeries", "Test", "ToeplitzMatrices", "WoodburyFactorizations"]
-git-tree-sha1 = "4c483164c7c204624965ba4a8817f12e0b808f9d"
+deps = ["BlockFactorizations", "DiffResults", "FillArrays", "ForwardDiff", "IterativeSolvers", "KroneckerProducts", "LazyArrays", "LinearAlgebra", "NearestNeighbors", "SparseArrays", "SpecialFunctions", "StaticArrays", "TaylorSeries", "Test", "ToeplitzMatrices", "WoodburyFactorizations"]
+git-tree-sha1 = "99debf78773006f8c574c8648e5d90161fb2403c"
 uuid = "b3329135-7958-41d4-bb02-e084c5a526bf"
-version = "0.1.0"
+version = "0.2.1"
 
 [[deps.Crayons]]
 git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
@@ -189,7 +189,9 @@ version = "4.1.1"
 
 [[deps.CrystalShift]]
 deps = ["BackgroundSubtraction", "CSV", "CovarianceFunctions", "DataFrames", "JSON", "LinearAlgebra", "NPZ", "OptimizationAlgorithms", "ProgressBars", "Random", "SpecialFunctions", "Test"]
-path = "/Users/ming/.julia/dev/CrystalShift"
+git-tree-sha1 = "060f6c18c95eddcfd12b873f83e739e3a0768272"
+repo-rev = "main"
+repo-url = "https://github.com/MingChiangChang/CrystalShift.jl"
 uuid = "fb120844-f04e-4a6b-a6eb-278194263097"
 version = "0.1.0"
 
@@ -240,6 +242,12 @@ deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialF
 git-tree-sha1 = "dd933c4ef7b4c270aacd4eb88fa64c147492acf0"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "1.10.0"
+
+[[deps.Distances]]
+deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
+git-tree-sha1 = "3258d0659f812acde79e8a74b11f17ac06d0ca04"
+uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+version = "0.10.7"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -311,9 +319,9 @@ version = "0.9.18"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "deed294cde3de20ae0b2e0355a6c4e1c6a5ceffc"
+git-tree-sha1 = "246621d23d1f43e3b9c368bf3b72b2331a27c286"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.12.8"
+version = "0.13.2"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -528,9 +536,9 @@ version = "0.15.14"
 
 [[deps.LazyArrays]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "MatrixFactorizations", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "7c68d0680060e934af2d6ccd9bb06ff870a45bb1"
+git-tree-sha1 = "721bebe4d0f8581c18fccf272c62000e22a80a2d"
 uuid = "5078a376-72f3-5289-bfd5-ec5146d43c02"
-version = "0.22.6"
+version = "0.22.10"
 
 [[deps.LazyInverses]]
 deps = ["LinearAlgebra", "Test"]
@@ -648,9 +656,9 @@ version = "0.10.9"
 
 [[deps.MatrixFactorizations]]
 deps = ["ArrayLayouts", "LinearAlgebra", "Printf", "Random"]
-git-tree-sha1 = "97a22108aee420254cec1c6d063243add81ca002"
+git-tree-sha1 = "2212d36f97e01347adb1460a6914e20f2feee853"
 uuid = "a3b82374-2e81-5b9e-98ce-41277c0e4c87"
-version = "0.8.7"
+version = "0.9.1"
 
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
@@ -695,6 +703,12 @@ version = "0.4.1"
 git-tree-sha1 = "b086b7ea07f8e38cf122f5016af580881ac914fe"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.7"
+
+[[deps.NearestNeighbors]]
+deps = ["Distances", "StaticArrays"]
+git-tree-sha1 = "ded92de95031d4a8c61dfb6ba9adb6f1d8016ddd"
+uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
+version = "0.4.10"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
@@ -981,9 +995,9 @@ version = "0.33.16"
 
 [[deps.StatsFuns]]
 deps = ["ChainRulesCore", "HypergeometricFunctions", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "25405d7016a47cf2bd6cd91e66f4de437fd54a07"
+git-tree-sha1 = "72e6abd6fc9ef0fa62a159713c83b7637a14b2b8"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "0.9.16"
+version = "0.9.17"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -1017,9 +1031,9 @@ uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 
 [[deps.TaylorSeries]]
 deps = ["LinearAlgebra", "Markdown", "Requires", "SparseArrays"]
-git-tree-sha1 = "4baa57538d07edb0d209469a0ff27e40234a91cc"
+git-tree-sha1 = "9828a3a1c43cc9cf19764caba22445e44a7959fe"
 uuid = "6aa5eb33-94cf-58f4-a9d0-e4b2c4fc25ea"
-version = "0.11.5"
+version = "0.12.1"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]

@@ -13,7 +13,7 @@ mean_θ = [1., 1., .2]
 std_θ = [.2, 5., 1.]
 
 # CrystalPhas object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -30,7 +30,7 @@ end
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
 println("$(size(cs, 1)) phase objects created!")
-tree = Tree(cs[1:15], 3)
+tree = Tree(cs[1:15], 3, s)
 x = collect(8:.035:45)
 y = zero(x)
 for node in tree.nodes[2:3]
@@ -44,7 +44,7 @@ result = bestfirstsearch(tree, x, y, std_noise, mean_θ, std_θ, 10,
                         maxiter=64, regularization=true) # should return a bunch of node
 ind = find_first_unassigned(result) - 1
 min_node = argmin([norm(result[i](x).-y) for i in eachindex(result[1:ind])])
-@test Set(get_phase_ids(result[min_node])) == Set([1,2])
+@test Set(get_phase_ids(result[min_node])) == Set([0,1])
 
 result = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 10,
                         maxiter=1000, regularization=true) # should return a bunch of node

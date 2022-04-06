@@ -37,7 +37,7 @@ function Node(PM::PhaseModel, _str::AbstractVector{<:AbstractString}, id::Int)
 end
 
 
-function Node(_str::String, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
+function Node(_str::AbstractString, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
 	Node(PhaseModel(CrystalPhase(String(_str), wid_init, profile)), Node[], id, Float64[], Float64[], 0., false)
 end
 
