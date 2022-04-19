@@ -50,7 +50,7 @@ function Node(node::Node, phases::AbstractVector{<:CrystalPhase},
 			x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
 	check_same_phase(node, phases) || error("Phases must be the same as in the node")
 	recon = phases.(x)
-	Node(phases, node.child_node, node.id, 
+	Node(PhaseModel(phases), node.child_node, node.id, 
 	     recon, y.-recon, cos_angle(recon, y), isOptimized)
 end
 
@@ -62,10 +62,10 @@ function Node(node::Node, PM::PhaseModel,
 	recon, y.-recon, cos_angle(recon, y), isOptimized)
 end
 
-function Node(PM::PhaseModel, child_nodes::AbstractVector,
+function Node(PM::PhaseModel, child_nodes::AbstractVector, id::Int64,
 		x::AbstractVector, y::AbstractVector)
 	recon = PM(x)
-	Node(CPs, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
+	Node(PM, child_nodes, id, recon, y.-recon, cos_angle(y, recon), false)
 end
 # TODO: Include background into PhaseModel
 # function Node(CPs::AbstractVector{<:CrystalPhase},
@@ -164,7 +164,7 @@ end
 function remove_child!(parent::Node, child::Node)
 	for (idx, cn) in enumerate(parent.child_node)
         if cn == child
-	        deleteat!(parent.child_node, child)
+	        deleteat!(parent.child_node, idx)
 		end
 	end
 end
@@ -182,8 +182,8 @@ end
 
 function get_node_with_id(nodes::AbstractVector, id::Int)
     for i in eachindex(nodes)
-		if get_phase_ids(nodes[i])[1] == id
-			return @view nodes[i, :]
+		if !isempty(get_phase_ids(nodes[i])) && get_phase_ids(nodes[i])[1] == id
+			return @view nodes[i:i]
 		end
 	end
 end
@@ -192,7 +192,7 @@ end
 function get_node_with_id(nodes::AbstractVector, ids::AbstractVector{<:Int})
 	indices = Vector{Int}()
     for i in eachindex(nodes)
-		if get_phase_ids(nodes[i])[1] in ids
+		if !isempty(get_phase_ids(nodes[i])) && get_phase_ids(nodes[i])[1] in ids
 			push!(indices, i)
 		end
 	end

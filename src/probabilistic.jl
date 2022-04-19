@@ -43,7 +43,7 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 		return 1e8
 	end
 	# println(val - (logdet(Σ) + d * log(2π)))
-	return val - (logdet(Σ) + d * log(2π)) # 
+	return val - (logdet(Σ) - d * log(2π)) # 
 end
 
 approximate_evidence(x...) = exp(-approximate_negative_log_evidence(x...))
