@@ -78,7 +78,7 @@ for i in tqdm(eachindex(t))
     y ./= maximum(y)
     y = y[1:400]
 
-    tree = Lazytree(cs, max_num_phases, x)
+    tree = Lazytree(cs, max_num_phases, x, s)
     result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
                         #method=method, objective = objective,
                         maxiter=128, regularization=true) #, verbose = true) # should return a bunch of node

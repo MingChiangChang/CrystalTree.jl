@@ -8,6 +8,7 @@ import CrystalShift: get_phase_ids
 
 using LazyInverses
 using OptimizationAlgorithms
+using CovarianceFunctions: EQ
 
 export Node, Tree
 

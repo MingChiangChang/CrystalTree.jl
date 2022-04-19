@@ -16,7 +16,7 @@ mean_θ = [1., 1., .2]
 std_θ = [.5, .5, 1.]
 
 # CrystalPhas object creation
-path = "../data/"
+path = "data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -36,11 +36,11 @@ cs = Vector{CrystalPhase}(undef, size(s))
 x = LinRange(8, 45, 512)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
+#collect(x)
+LT = Lazytree(cs, 2, x, 5, s)
 
-LT = Lazytree(cs, 2, collect(x), s)
-
-test_pm1 = add_phase(LT.nodes[1].phase_model, cs[1])
-test_pm2 = add_phase(test_pm1, cs[2])
+test_pm1 = add_phase(LT.nodes[1].phase_model, cs[1], x, 5)
+test_pm2 = add_phase(test_pm1, cs[2], x, 5)
 
 
 @test test_pm1.CPs[1] == cs[1]
@@ -53,7 +53,12 @@ attach_child_nodes!(LT.nodes[1], child_nodes)
 push!(LT.nodes, child_nodes...)
 t = expand!(LT, LT.nodes[1].child_node[2])
 
-LT = Lazytree(cs, 2, x, s)
+LT = Lazytree(cs, 2, x, 20, s, true)
+
+noise_intensity = 0.1
+noise = noise_intensity.*(1 .+ sin.(0.2x))
+@. y += noise
+
 
 # @time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
 #                   maxiter=64, regularization=true)
@@ -61,6 +66,10 @@ LT = Lazytree(cs, 2, x, s)
 @time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
+using Plots
+plt = plot(x, y)
+plot!(x, evaluate!(zero(x), t[ind].phase_model, x))
+display(plt)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
 
 end

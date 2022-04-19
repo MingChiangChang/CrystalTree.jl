@@ -15,6 +15,7 @@ end
 
 # TODO: allow PM() to create empty phasemodel object
 Node() = Node(PhaseModel(), Node[], 1, Float64[], Float64[], 0., false) # Root
+Node(bg::BackgroundModel) = Node(PhaseModel(bg), Node[], 1, Float64[], Float64[], 0., false) 
 # Node(CP::CrystalPhase, id::Int) = Node(PhaseModel(CP), Node[], id, Float64[], Float64[], 0., false)
 # Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(PhaseModel(CPs), Node[], id, Float64[], Float64[], 0., false)
 # Node(PM::PhaseModel, id::Int) = Node(PM, Node[], id, Float64[], Float64[], 0., false)
@@ -75,7 +76,7 @@ end
 # end
 
 
-
+Base.size(n::Nothing) = 0
 Base.size(node::Node) = size(node.phase_model.CPs)
 Base.getindex(n::Node, i::Int) = Base.getindex(n.phase_model, i)
 Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]

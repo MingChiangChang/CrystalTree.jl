@@ -3,17 +3,25 @@ struct Lazytree{NS<:AbstractVector{<:Node},
                 CP<:AbstractVector{<:CrystalPhase},
                 DP<:Int,
                 AR<:AbstractVector,
-                S<:AbstractVector{<:AbstractString}} <: AbstractTree
+                L<:Real,
+                S<:AbstractVector} <: AbstractTree
     nodes::NS
     phase_combinations::AS # Keeping track of phase combinations
     phases::CP
     depth::DP
     x::AR
+    l::L
     _str::S
 end
 
-function Lazytree(CPs::AbstractVector{<:CrystalPhase}, depth::Int, x::AbstractVector, _str::AbstractVector{<:AbstractString})
-    Lazytree(Node[Node()], Set(), CPs, depth, x, _str)
+function Lazytree(CPs::AbstractVector{<:CrystalPhase}, depth::Int,
+                  x::AbstractVector, l::Real, _str::AbstractVector{<:AbstractString}, background::Bool=false)
+    if background
+        bg = BackgroundModel(x, EQ(), l)
+        return Lazytree(Node[Node(bg)], Set(), CPs, depth, x, l, _str)
+    else
+        return Lazytree(Node[Node()], Set(), CPs, depth, x, l, _str)
+    end
 end
 
 
@@ -31,19 +39,25 @@ function expand!(LT::Lazytree, node::Node, starting_id::Int)
     return child_nodes
 end
 
-function add_phase(PM::PhaseModel, phase::CrystalPhase)
-    if isempty(PM.CPs)
-        return PhaseModel(phase, PM.background)
+function add_phase(PM::PhaseModel, phase::CrystalPhase, x::AbstractVector, l::Real)
+    if isnothing(PM.background)
+        bg = nothing
     else
-        PhaseModel(vcat(PM.CPs, phase), PM.background)
+        bg = BackgroundModel(x, EQ(), l)
+    end
+    if isnothing(PM.CPs)  || isempty(PM.CPs) 
+        return PhaseModel(phase, bg)
+    else
+        PhaseModel(vcat(PM.CPs, phase), bg)
     end
 end
 
 function create_child_nodes(LT::Lazytree, node::Node, starting_id::Int)
     new_nodes = Node[]
     for i in eachindex(LT.phases)
-        if is_allowed_new_phase(LT, node, LT.phases[i])
-            push!(new_nodes, Node(add_phase(node.phase_model, LT.phases[i]), LT._str, starting_id+i-1))
+        if isnothing(node.phase_model.CPs) || is_allowed_new_phase(LT, node, LT.phases[i])
+            push!(new_nodes, Node(add_phase(node.phase_model, LT.phases[i], LT.x, LT.l),
+                                 LT._str, starting_id+i-1))
         end
     end
     return new_nodes

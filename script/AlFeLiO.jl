@@ -18,8 +18,8 @@ std_θ = [0.2, .5, 1.]
 method = LM
 objective = "LS"
 improvement = 0.1
-test_path = "C:\\Users\\r2121\\Downloads\\AlLiFeO\\sticks.csv"
-# test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
+# test_path = "C:\\Users\\r2121\\Downloads\\AlLiFeO\\sticks.csv"
+test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
 # test_path = "/Users/ming/Downloads/cif/sticks.csv"
 f = open(test_path, "r")
 
@@ -51,8 +51,8 @@ cs = Vector{CrystalPhase}(undef, size(s))
 cs = @. CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(0.01), ))
 # println("$(size(cs, 1)) phase objects created!")
 max_num_phases = 3
-# data, _ = load("AlLiFe", "/Users/ming/Downloads/")
-data, _ = load("AlLiFe", "C:\\Users\\r2121\\Downloads\\")
+data, _ = load("AlLiFe", "/Users/ming/Downloads/")
+# data, _ = load("AlLiFe", "C:\\Users\\r2121\\Downloads\\")
 x = data.Q
 x = x[1:400]
 
