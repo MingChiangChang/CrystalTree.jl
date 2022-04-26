@@ -33,7 +33,7 @@ end
 function Node(PM::PhaseModel, _str::AbstractVector{<:AbstractString}, id::Int)
 	Node(PhaseModel(CrystalPhase.(String.(_str[get_id.(PM.CPs).+1]),
 	                              (PM.CPs[1].σ, ), (PM.CPs[1].profile, )),
-								  PM.background),
+								  PM.wildcard, PM.background),
 								  Node[], id, Float64[], Float64[], 0., false)
 end
 
@@ -58,6 +58,7 @@ function Node(node::Node, PM::PhaseModel,
               x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
 	check_same_phase(node, PM) || error("Phases must be the same as in the node")
 	recon = PM(x)
+	
 	Node(PM, node.child_node, node.id, 
 	recon, y.-recon, cos_angle(recon, y), isOptimized)
 end
@@ -96,24 +97,24 @@ function check_same_phase(PM1::PhaseModel, PM2::PhaseModel)
 	check_same_phase(PM1.CPs, PM2.CPs)
 end
 function check_same_phase(PM::PhaseModel, 
-	                      phase_comb::AbstractVector{<:CrystalPhase})
+	                      phase_comb::AbstractVector{<:AbstractPhase})
 	check_same_phase(PM.CPs, phase_comb)
 end
 
-function check_same_phase(phase_comb::AbstractVector{<:CrystalPhase}, 
+function check_same_phase(phase_comb::AbstractVector{<:AbstractPhase}, 
 	                      PM::PhaseModel)
     check_same_phase(PM.CPs, phase_comb)
 end
 
-function check_same_phase(phase_comb1::AbstractVector{<:CrystalPhase}, 
-	                      phase_comb2::AbstractVector{<:CrystalPhase})
-    ids_1 = Set([phase_comb1[i].id for i in eachindex(phase_comb1)])
-	ids_2 = Set([phase_comb2[i].id for i in eachindex(phase_comb2)])
+function check_same_phase(phase_comb1::AbstractVector{<:AbstractPhase}, 
+	                      phase_comb2::AbstractVector{<:AbstractPhase})
+    # ids_1 = Set([phase_comb1[i].id for i in eachindex(phase_comb1)])
+	# ids_2 = Set([phase_comb2[i].id for i in eachindex(phase_comb2)])
 
 	names_1 = Set([phase_comb1[i].name for i in eachindex(phase_comb1)])
-	names_2 = Set([phase_comb1[i].name for i in eachindex(phase_comb1)])
+	names_2 = Set([phase_comb2[i].name for i in eachindex(phase_comb2)])
 
-	ids_1 == ids_2 && names_1 == names_2
+	names_1 == names_2 # ids_1 == ids_2 &&
 end
 
 function Base.show(io::IO, node::Node)

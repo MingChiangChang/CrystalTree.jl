@@ -16,7 +16,7 @@ mean_θ = [1., 1., .2]
 std_θ = [.5, .5, 1.]
 
 # CrystalPhas object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -66,10 +66,10 @@ noise = noise_intensity.*(1 .+ sin.(0.2x))
 @time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
-using Plots
-plt = plot(x, y)
-plot!(x, evaluate!(zero(x), t[ind].phase_model, x))
-display(plt)
+# using Plots
+# plt = plot(x, y)
+# plot!(x, evaluate!(zero(x), t[ind].phase_model, x))
+# display(plt)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
 
 end

@@ -1,4 +1,4 @@
-# module Testsearch
+module Testsearch
 using CrystalTree
 using CrystalTree: bestfirstsearch, res_bfs, find_first_unassigned
 using CrystalTree: get_all_child_node_ids, get_ids, get_all_child_node, get_phase_ids
@@ -63,4 +63,4 @@ res = [norm(result[i](x).-y) for i in 1:last_ind]
 ind = argmin(res)
 @test Set(get_phase_ids(result[ind])) == Set([0, 1]) 
 
-# end # module
+end # module

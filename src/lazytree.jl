@@ -1,6 +1,6 @@
 struct Lazytree{NS<:AbstractVector{<:Node},
                 AS<:AbstractSet,
-                CP<:AbstractVector{<:CrystalPhase},
+                CP<:AbstractVector{<:AbstractPhase},
                 DP<:Int,
                 AR<:AbstractVector,
                 L<:Real,
@@ -14,7 +14,7 @@ struct Lazytree{NS<:AbstractVector{<:Node},
     _str::S
 end
 
-function Lazytree(CPs::AbstractVector{<:CrystalPhase}, depth::Int,
+function Lazytree(CPs::AbstractVector{<:AbstractPhase}, depth::Int,
                   x::AbstractVector, l::Real, _str::AbstractVector{<:AbstractString}, background::Bool=false)
     if background
         bg = BackgroundModel(x, EQ(), l)
@@ -39,16 +39,16 @@ function expand!(LT::Lazytree, node::Node, starting_id::Int)
     return child_nodes
 end
 
-function add_phase(PM::PhaseModel, phase::CrystalPhase, x::AbstractVector, l::Real)
+function add_phase(PM::PhaseModel, phase::AbstractPhase, x::AbstractVector, l::Real)
     if isnothing(PM.background)
         bg = nothing
     else
         bg = BackgroundModel(x, EQ(), l)
     end
     if isnothing(PM.CPs)  || isempty(PM.CPs) 
-        return PhaseModel(phase, bg)
+        return PhaseModel([phase], PM.wildcard, bg)
     else
-        PhaseModel(vcat(PM.CPs, phase), bg)
+        PhaseModel(vcat(PM.CPs, phase), PM.wildcard, bg)
     end
 end
 
@@ -63,7 +63,7 @@ function create_child_nodes(LT::Lazytree, node::Node, starting_id::Int)
     return new_nodes
 end
 
-function is_allowed_new_phase(LT::Lazytree, node::Node, phase::CrystalPhase)
+function is_allowed_new_phase(LT::Lazytree, node::Node, phase::AbstractPhase)
     current_phases = get_phase_ids(node)
     new_phase = phase.id
     return phase.id ∉ get_phase_ids(node) && Set(vcat(current_phases, new_phase)) ∉ LT.phase_combinations
