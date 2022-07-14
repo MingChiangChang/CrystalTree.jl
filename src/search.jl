@@ -12,7 +12,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         deleting = Set()
 
         @threads for i in eachindex(nodes)
-            
+
             phases = optimize!(nodes[i].phase_model, x, y, std_noise,
                               mean, std, method=LM,
                               maxiter=maxiter,
@@ -34,7 +34,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
                 y::AbstractVector, std_noise::Real, mean::AbstractVector,
                 std::AbstractVector;
                 maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
-                
+
     node_order = traversal_func(t)
 
     @threads for node in node_order
@@ -81,7 +81,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
             ranked_nodes = first_level_nodes
             num_search = num_of_phases
         end
-        
+
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].phase_model, x, y, std_noise,
                   mean_θ, std_θ, method=method, objective=objective, maxiter=maxiter, regularization=regularization)
@@ -166,7 +166,7 @@ function rank_nodes_with_res_at_level(tree::Tree, level::Int, x::AbstractVector,
         nodes = get_nodes_at_level(tree.nodes, level)
     else
         optimized_nodes_from_previous_level = get_optimized_nodes_at_level(tree.nodes, level-1)
-        
+
         for node in optimized_nodes_from_previous_level
             for cn in node.child_node
                 cn = Node(cn.phase_model, cn.child_node, cn.id, cn.recon, cn.residual, 
@@ -174,7 +174,7 @@ function rank_nodes_with_res_at_level(tree::Tree, level::Int, x::AbstractVector,
                 false)
             end
         end
-        
+
         nodes = get_top_inner_child_nodes(tree, optimized_nodes_from_previous_level, max_search)
     end
 

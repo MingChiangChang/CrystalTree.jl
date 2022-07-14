@@ -11,6 +11,7 @@ using OptimizationAlgorithms
 using CovarianceFunctions: EQ
 
 export Node, Tree
+export search!, search_k2n
 
 include("util.jl")
 include("node.jl")

@@ -42,8 +42,8 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 		# println("negative det")
 		return 1e8
 	end
-	# println(val - (logdet(Σ) + d * log(2π)))
-	return val - (logdet(Σ) - d * log(2π)) # 
+	# println(val) #- (logdet(Σ) - d * log(2π)))
+	return val - (logdet(Σ) - d * log(2π)) #
 end
 
 approximate_evidence(x...) = exp(-approximate_negative_log_evidence(x...))
@@ -54,7 +54,6 @@ function newton!(f, θ::AbstractVector; min_step::Real = 1e-10, maxiter::Int = 5
 	d = OptimizationAlgorithms.direction(N, θ)
 	i = 1
 	while maximum(abs, d) > min_step * maximum(abs, θ) && i < maxiter
-		println(i)
 		OptimizationAlgorithms.update!(N, θ)
 		d = N.d
 		i += 1

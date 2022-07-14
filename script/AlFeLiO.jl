@@ -34,7 +34,7 @@ if s[end] == ""
 end
 
 function node_under_improvement_constraint(nodes, improvement, x, y)
-    
+
     min_res = (Inf, 1)
     for i in eachindex(nodes)
         copy_y = copy(y)
@@ -67,15 +67,18 @@ t = split(read(sol, String), "\n")
 gt = get_ground_truth(t)
 println(gt)
 answer = Array{Int64}(undef, (length(t), 7))
+default(labelfontsize=16, xtickfontsize=12, ytickfontsize=12,
+     legendfontsize=12)
 # for y in ProgressBar(eachcol(data.I[:,175:175]))
 for i in tqdm(eachindex(t))
+    i=98
     solution = split(t[i], ",")
     col = parse(Int, solution[1])
     y = data.I[:,col]
     y ./= maximum(y)
     y = y[1:400]
 
-    tree = Lazytree(cs, max_num_phases, x, s)
+    tree = Lazytree(cs, max_num_phases, x, 8, s, false)
 
     result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
                         #smethod=method, objective = objective,
@@ -83,16 +86,21 @@ for i in tqdm(eachindex(t))
     println("Done searching")
     println(length(result[1]))
     # println(length(result[2]))
-    
+
     best_node_at_each_level = Vector{Node}()
     for j in 1:tree.depth
-        res = [norm(evaluate_residual!(result[j][k].phase_model, x, copy(y))) 
+        res = [norm(evaluate_residual!(result[j][k].phase_model, x, copy(y)))
                for k in eachindex(result[j])]
         # println(res)
         i_min = argmin(res)
         push!(best_node_at_each_level, result[j][i_min])
-        plt = plot(x, y, label="Original", title="$(i)")
-        plot!(x, result[j][i_min](x), label="Optimized")
+        plt = plot(x, y, label="Original", title="$(i)", linewidth=4, ylabel="Intensity a.u.")
+        for l in 1:length(result[j][i_min].phase_model.CPs)
+            plot!(x, result[j][i_min].phase_model.CPs[l].(x), label=result[j][i_min].phase_model.CPs[l].name, linewidth=2)
+        end
+        # plot!(x, result[j][i_min](x), label="Optimized")
+        plot!(size=(800,600))
+        savefig("optimized_$(j).png")
         display(plt)
     end
     push!(result_node, node_under_improvement_constraint(best_node_at_each_level, improvement, x, y))
@@ -103,7 +111,7 @@ for i in eachindex(result_node)
     for j in eachindex(result_node[i].phase_model.CPs)
         re[get_phase_number(result_node[i].phase_model.CPs[j].name)] += 1
     end
-    answer[i, :] = re 
+    answer[i, :] = re
     println(t[i])
     println("$(i): $(re)")
 end

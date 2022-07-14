@@ -11,7 +11,7 @@ using LinearAlgebra
 
 
 std_noise = 1e-2
-mean_θ = [1., 1., .1] 
+mean_θ = [1., 1., .1]
 std_θ = [0.05, 5., .1]
 
 # CrystalPhas object creation
