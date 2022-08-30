@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0-beta3"
 manifest_format = "2.0"
-project_hash = "0ebd8841a3c5aae4e54e5a0e2f1a564d8ac4eed3"
+project_hash = "6d34723f376c4a92d73ed834f00a754315fee69c"
 
 [[PrettyTables]]
 deps = ["Crayons", "Formatting", "Markdown", "Reexport", "Tables"]
@@ -197,7 +197,9 @@ version = "4.1.1"
 
 [[deps.CrystalShift]]
 deps = ["BackgroundSubtraction", "CSV", "CovarianceFunctions", "DataFrames", "ForwardDiff", "JSON", "LazyInverses", "LinearAlgebra", "NPZ", "OptimizationAlgorithms", "ProgressBars", "Random", "SpecialFunctions", "Test"]
-path = "/Users/ming/.julia/dev/CrystalShift"
+git-tree-sha1 = "53663392da96c984db61cbde38ee5577a6be51fb"
+repo-rev = "777cc3e359ca4ae8d59fe2d6a6a2df780b68b162"
+repo-url = "https://github.com/MingChiangChang/CrystalShift.jl"
 uuid = "fb120844-f04e-4a6b-a6eb-278194263097"
 version = "0.1.0"
 
