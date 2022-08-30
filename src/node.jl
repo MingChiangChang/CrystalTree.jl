@@ -82,6 +82,7 @@ Base.size(node::Node) = size(node.phase_model.CPs)
 Base.getindex(n::Node, i::Int) = Base.getindex(n.phase_model, i)
 Base.getindex(n::Node, I::Vector{Int}) = [n[i] for i in I]
 get_phase_ids(n::Node) = get_phase_ids(n.phase_model)
+get_phase_ids(n::Nothing) = []
 
 
 

@@ -42,7 +42,7 @@ function precision(; answer, ground_truth, verbose::Bool=false)
     end
     
     return precision
-end 
+end
 
 function recall(; answer, ground_truth, verbose::Bool=false)
     size(answer, 1) == size(ground_truth, 1) || error("answer and ground truth must have same first dimension")

@@ -60,10 +60,12 @@ noise = noise_intensity.*(1 .+ sin.(0.2x))
 @. y += noise
 
 
-# @time t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
-#                   maxiter=64, regularization=true)
-# println("tt")
+t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
+                  maxiter=64, regularization=true)
+
+LT = Lazytree(cs, 2, x, 20, s, true)
 @time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
+# t = reduce(vcat, t)
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
 # using Plots

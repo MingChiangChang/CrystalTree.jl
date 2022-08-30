@@ -28,10 +28,11 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 	d = length(θ)
 	val = f(θ)
 	H = ForwardDiff.hessian(f, θ)
+	display(Matrix(H))
 	Σ = inverse(H) # reinterpret Hessian of minimization problem as inverse of covariance matrix
 	# if verbose
 	# println("in approximate_negative_log_evidence")
-	# display(eigvals(Matrix(Σ)))
+	display(eigvals(Matrix(Σ)))
 	# display(Matrix(Σ))
 	# end
 	# println("val: $(val)")
