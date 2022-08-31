@@ -4,6 +4,7 @@
 function get_probabilities(results::AbstractVector{Node},
 							x::AbstractVector,
 							y::AbstractVector,
+							std_noise::Real,
 							mean_θ::AbstractVector,
 							std_θ::AbstractVector)
 
