@@ -1,7 +1,7 @@
 # computes log marginal likelihood of θ given (x, y) based on the Laplace approximation
 # NOTE: the input θ should be an (approximate) local minimum with respect to θ
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ
-function get_probabilities(results::AbstractVector{Node},
+function get_probabilities(results::AbstractVector,
 							x::AbstractVector,
 							y::AbstractVector,
 							std_noise::Real,
