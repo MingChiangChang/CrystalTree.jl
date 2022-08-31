@@ -1,11 +1,30 @@
 # computes log marginal likelihood of θ given (x, y) based on the Laplace approximation
 # NOTE: the input θ should be an (approximate) local minimum with respect to θ
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ
+function get_probabilities(results::AbstractVector{Node},
+							x::AbstractVector,
+							y::AbstractVector,
+							mean_θ::AbstractVector,
+							std_θ::AbstractVector)
+
+	prob = zeros(length(results))
+
+	for i in 1:length(results)
+		θ = get_free_params(results[i].phase_model)
+		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
+		prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, "LS")
+	end
+
+	prob ./= minimum(prob) * std_noise # Renormalize
+	exp.(-prob) ./ sum(exp.(-prob))
+end
+
 function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::AbstractVector,
 								 y::AbstractVector, std_noise::RealOrVec,
 								 mean_θ::RealOrVec, std_θ::RealOrVec, objective::String, λ::Real = 1e-6,
 								 verbose::Bool = false)
 	mean_log_θ = log.(mean_θ)
+
 	f = if objective == "LS"
 			function (log_θ)
 				ls_objective(node.phase_model, log_θ, x, y, std_noise, mean_log_θ, std_θ)
