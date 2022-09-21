@@ -13,10 +13,15 @@ using Plots
 using LinearAlgebra
 using Base.Threads
 
-std_noise = 9e-3
-mean_θ = [1., 1., .2] 
-std_θ = [0.005, 1., .05]
+# std_noise = 9e-3
+# mean_θ = [1., 1., .2]
+# std_θ = [0.005, 1., .05]
 # top 5: 83% std_θ = [0.005, .2, .05]
+
+std_noise = 9e-3
+mean_θ = [1., .5, .5]
+std_θ = [0.05, 1., .05]
+
 
 method = LM
 objective = "LS"
@@ -38,7 +43,7 @@ end
 
 
 cs = Vector{CrystalPhase}(undef, size(s))
-cs = @. CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(0.01), ))
+cs = @. CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(0.0001), ))
 # println("$(size(cs, 1)) phase objects created!")
 max_num_phases = 3
 data, _ = load("AlLiFe", "/Users/ming/Downloads/")
@@ -49,7 +54,7 @@ x = x[1:400]
 result_node = Vector{Vector{Node}}()
 
 function node_under_improvement_constraint(nodes, improvement, x, y)
-    
+
     min_res = (Inf, 1)
     for i in eachindex(nodes)
         copy_y = copy(y)
@@ -78,7 +83,7 @@ for i in tqdm(eachindex(t))
     y ./= maximum(y)
     y = y[1:400]
 
-    tree = Lazytree(cs, max_num_phases, x, s)
+    tree = Lazytree(cs, max_num_phases, x, 5, s, false)
     result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
                         #method=method, objective = objective,
                         maxiter=128, regularization=true) #, verbose = true) # should return a bunch of node
@@ -88,19 +93,8 @@ for i in tqdm(eachindex(t))
     prob = Vector{Float64}(undef, length(result))
     @threads for i in eachindex(result)
         θ = get_free_params(result[i].phase_model)
-        # println(θ)
-        # orig = [p.origin_cl for p in result[i].phase_model]
-        # reconstruction[:, i] = reconstruct!(result[i].phase_model, θ, x, zero(x))
         full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].phase_model.CPs)
-        # num_of_params[i] = length(θ)
-        # plt = plot(x, y, label="Original")
-        # plot!(x, result[i](x), label="Optimized")
-        # display(plt)
         prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective, true)
-        # residual_norm[i] = norm(y - reconstruction[:, i])
-        # plt = plot(x, y, label="Original")
-        # plot!(x, result[i](x), label="Optimized")
-        # display(plt)
     end
 
     lowest = sortperm(prob)[1:K]
@@ -121,11 +115,25 @@ for i in eachindex(result_node)
         one_phase_answer[j, :] = re
     end
     answer[i, :, :] = one_phase_answer
-    println(t[i])
-    println("$(i): $(one_phase_answer)")
+    # println(t[i])
+    # println("$(i): $(one_phase_answer)")
 end
 
+using JSON, Dates
+d = Dict{String, Any}()
+d["std_noise"] = std_noise
+d["std_theta"] = std_θ
+d["mean_theta"] = mean_θ
+d["top_1_acc"] = top_k_accuracy(answer, gt, 1)
+d["top_5_acc"] = top_k_accuracy(answer, gt, 5)
+d["answer"] = answer
+d["gt"] = gt
+d["precision"] = precision(answer=answer[:,1,:], ground_truth=gt, verbose=false)
+d["recll"] = recall(answer=answer[:,1,:], ground_truth=gt, verbose=false)
 
+open("alfelio_$(Dates.format(now(), "yyyy-mm-dd_HH:MM")).json", "w") do f
+    JSON.print(f, d)
+end
 # println(result_node[1].phase_model)
 
 #     # residual_norm = zeros(num_nodes)

@@ -98,7 +98,7 @@ function get_ground_truth(str::AbstractVector)
 end
 
 function top_k_accuracy(result::AbstractArray,
-                        sol::AbstractArray, 
+                        sol::AbstractArray,
                         k::Int64)
     correct_ct = 0
     for i in 1:size(sol, 1)
@@ -112,7 +112,6 @@ end
 function in_top_k(result::AbstractArray, sol::AbstractArray, k::Int64)
     for i in 1:k
         if result[i, :] == sol
-            
             return true
         end
     end

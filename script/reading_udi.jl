@@ -7,6 +7,7 @@ using CrystalShift: Wildcard, Crystal, twoθ2q, volume
 
 using CovarianceFunctions: EQ, Matern
 using Plots
+using LaTeXStrings
 
 path = "/Users/ming/Downloads/ana__9_3594.udi"
 
@@ -83,7 +84,7 @@ cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(1.0), ))
 default(labelfontsize=16, xtickfontsize=12, ytickfontsize=12, linewidth=3,
         xlabel="q (nm⁻¹)", ylabel="Normalized Intensitiy", legendfontsize=12)
-for i in sn
+for i in sn[1:1]
     cs = Vector{CrystalPhase}(undef, size(s))
     @. cs = CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(0.9), ))
     ind = findall(x->x==i, sample_number)[1]
@@ -96,34 +97,34 @@ for i in sn
     pm = PhaseModel(cs[1:2], nothing, bg)
 
     opt_pm = full_optimize!(pm, q, I, std_noise, mean_θ, std_θ, maxiter=512, method=LM, objective="LS", regularization=true)
-
-    plt = plot(q, I, label="Raw Data", legend=:topleft, xlim=(10.5, 32.535), ylim=(0.0, 1.05))
-    plot!(size=(800,600))
+    default(labelfontsize=20, xtickfontsize=16, ytickfontsize=16, titlefontsize=20, legendfontsize=16)
+    plt = plot(q, I, label="Raw Data", legend=:topleft, xlim=(10.5, 32.535), ylim=(0.0, 1.05), linewidth=10,)
     savefig("raw_data.png")
-    plot!(q, evaluate!(zero(q), opt_pm.background, q), label="Background")
+    plot!(q, evaluate!(zero(q), opt_pm.background, q), label="Background", linewidth=4)
     savefig("raw_bg.png")
-    plot!(q, evaluate!(zero(q), opt_pm.CPs[2], q), label=L"SnO_2")
+    plot!(q, evaluate!(zero(q), opt_pm.CPs[2], q), label="SnO₂", linewidth=6)
     savefig("with_bg_sno.png")
-    plot!(q, evaluate!(zero(q), opt_pm.CPs[1], q), label=L"Cr_x Fe_y VO_4")
-    plot!(q, evaluate!(zero(q), opt_pm, q), label="Optimized Result")
+    plot!(q, evaluate!(zero(q), opt_pm.CPs[1], q), label="CrₐFeᵦVO₄", linewidth=6)
+    plot!(q, evaluate!(zero(q), opt_pm, q), color=:red, label="Optimized Result", linewidth=4)
+
+    plot!(size=(1200,900), left_margin=5Plots.mm, bottom_margin=5Plots.mm, dpi=300, framestyle = :box)
     savefig("final.png")
-    plot!(size=(800,600))
     display(plt)
     println("$(i) $(opt_pm.CPs[1])")
     push!(c, opt_pm.CPs[1])
     push!(v, volume(opt_pm.CPs[1].cl))
 end
 
-c_a = [i.cl.a for i in c]
-c_b = [i.cl.b for i in c]
-c_c = [i.cl.c for i in c]
-c_β = [i.cl.β for i in c]
-cl = [c_a, c_b, c_c, c_β]
-lattice_parm = ["a", "b", "c", "β"]
-plt = plot(layout = (4, 1), legend=false)
-# for i in eachindex(cl)
-#     plot!(cl[i] ./ maximum(cl[i]), label=lattice_parm[i])
-# end
-plot!(FeCr_ratio, cl)
-plot!(size=(800,800))
-display(plt)
+# c_a = [i.cl.a for i in c]
+# c_b = [i.cl.b for i in c]
+# c_c = [i.cl.c for i in c]
+# c_β = [i.cl.β for i in c]
+# cl = [c_a, c_b, c_c, c_β]
+# lattice_parm = ["a", "b", "c", "β"]
+# plt = plot(layout = (4, 1), legend=false)
+# # for i in eachindex(cl)
+# #     plot!(cl[i] ./ maximum(cl[i]), label=lattice_parm[i])
+# # end
+# plot!(FeCr_ratio, cl)
+# plot!(size=(800,800))
+# display(plt)

@@ -83,5 +83,5 @@ for (idx, name) in enumerate(names)
     ylabel!("T peak (°C)")
     xlabel!("Ta/(Ta+Sn)")
 end
-savefig("SnO2_b.png")
+# savefig("SnO2_b.png")
 display(plt)

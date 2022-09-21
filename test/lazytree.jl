@@ -4,7 +4,7 @@ using CrystalTree
 using CrystalTree: Lazytree, get_phase_ids
 using CrystalTree: add_phase, create_child_nodes, attach_child_nodes!, expand!
 using CrystalTree: search!, search_k2n!
-using DelimitedFiles
+# using DelimitedFiles
 using LinearAlgebra
 
 using CrystalShift: CrystalPhase, optimize!, Lorentz, PseudoVoigt

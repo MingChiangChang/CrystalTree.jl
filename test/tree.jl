@@ -1,7 +1,7 @@
 module Testtree
 using CrystalTree
 using CrystalTree: search!, bft, pos_res_thresholding, get_level, get_phase_ids
-using DelimitedFiles
+# using DelimitedFiles
 using LinearAlgebra
 using Test
 

@@ -4,7 +4,7 @@ using PhaseMapping: xray
 using BackgroundSubtraction: mcbl
 using LinearAlgebra
 using JSON
-using TimerOutputs
+# using TimerOutputs
 using ProgressBars
 using Profile
 using CSV
@@ -22,9 +22,10 @@ mean_θ = [1., .2]
 std_θ = [.2, 1.]
 
 # Readin data
-include("../src/CrystalTree.jl")
+# include("../src/CrystalTree.jl")
 # dl = "/Users/mingchiang/Downloads/"
-dl = "/Users/r2121/Downloads/"
+# dl = "/Users/r2121/Downloads/"
+dl = "../data/"
 # data = npzread(dl * "12_20F16_Ta-Sn-O_integrated.npy")
 # q = npzread(dl * "12_20F16_Ta-Sn-O_Q.npy")
 data = npzread(dl * "TaSnO_data.npy")
@@ -57,7 +58,7 @@ println("$(size(cs)) phase objects created!")
 
 wafer_result = Vector{StripeResult}(undef, size(data)[1])
 
-for i in tqdm(1:size(data, 1)) # size(data, 1)
+for i in tqdm(1:1)#size(data, 1)) # size(data, 1)
     # TODO Pre-screening of the heatmap
     # TODO Try t-SNE or UMAP on the data?
     condition = cond[i]

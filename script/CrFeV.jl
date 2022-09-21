@@ -133,22 +133,23 @@ norm_β = cs[1].cl.β
 c_β .= (c_β.-norm_β) ./norm_β .* 100
 cl = [c_a, c_b, c_c, c_β]
 lattice_parm = ["a", "b", "c", "β"]
-plt = plot(layout = (4, 1), legend=false)
+plt = plot(layout = 4, legend=false)
 # for i in eachindex(cl)
 #     plot!(cl[i] ./ maximum(cl[i]), label=lattice_parm[i])
 # end
 xticks = [1,2,3,4,5,6]
-default(labelfontsize=16, xtickfontsize=12, ytickfontsize=12, linewidth=3)
+default(labelfontsize=20, xtickfontsize=16, ytickfontsize=16, titlefontsize=20,linewidth=6,
+        xlims=(0.2, 0.85), ylims=(-0.8, 0.8))
 comp = FeCr_ratio ./ (FeCr_ratio .+ 1)
-p1 = plot(comp, cl[1], yerr=[uncertainties[i][1]./norm_a for i in 1:11], ylabel="Δa/a (%)", color=:red)
-p2 = plot(comp, cl[2], yerr=[uncertainties[i][2]./norm_b for i in 1:11], ylabel="Δb/b (%)", color=:orange)
-p3 = plot(comp, cl[3], yerr=[uncertainties[i][3]./norm_c for i in 1:11], ylabel="Δc/c (%)", color=:green)
-p4 = plot(comp, cl[4], yerr=[uncertainties[i][4]./norm_β for i in 1:11], xlabel="Fe Fraction", color=:blue, ylabel="Δβ/β (%)")
-plt = plot(p1, p2, p3, p4, layout = (4, 1), legend=false)
+p1 = plot(comp, cl[1], yerr=[uncertainties[i][1]./norm_a for i in 1:11], title="a", xlabel="", ylabel="Lattice Strain (%)", color=:red)
+p2 = plot(comp, cl[2], yerr=[uncertainties[i][2]./norm_b for i in 1:11], title="b", xlabel="", ylabel="", color=:orange)
+p3 = plot(comp, cl[3], yerr=[uncertainties[i][3]./norm_c for i in 1:11], title="c", ylabel="Lattice Strain (%)", xlabel="Fe/(Fe+Cr)", color=:green)
+p4 = plot(comp, cl[4], yerr=[uncertainties[i][4]./norm_β for i in 1:11], title="β", xlabel="Fe/(Fe+Cr)",ylabel="", color=:blue)
+plt = plot(p1, p2, p3, p4, layout = (2, 2), legend=false, left_margin=5Plots.mm, bottom_margin=2Plots.mm)
 # plot!(FeCr_ratio, cl, yerr=uncertainties[:][1:4])
-plot!(size=(800,800))
+plot!(size=(800,1000), dpi=300, framestyle = :box ,xticks=[0.2, 0.4, 0.6, 0.8])
 savefig("CrFeVO.png")
-# display(plt)
+display(plt)
 
 uncer_v = Vector{Measurement}()
 for i in 1:11
@@ -156,6 +157,6 @@ for i in 1:11
 end
 
 xtick=collect(1:5)
-plot(comp, uncer_v, xlabel="Fe Fraction", ylabel="Unit Cell volume (Å³)", legend=false)
+plot(comp, uncer_v, xlabel="Fe/(Fe+Cr)", ylabel="Unit Cell volume (Å³)", legend=false)
 scatter!(comp, v, color=:blue)
 savefig("volume.png")

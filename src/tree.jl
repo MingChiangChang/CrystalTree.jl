@@ -18,7 +18,6 @@ end
 
 # function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int;
 # 	         x::AbstractVector=[], include_background::Bool=false)
-    
 # end
 
 function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int, _str::AbstractVector{<:AbstractString})

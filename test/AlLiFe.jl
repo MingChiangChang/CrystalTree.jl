@@ -27,5 +27,5 @@ data, _ = load("AlLiFe", "/Users/r2121/Downloads/AlLiFe_data/")
 result = bestfirstsearch(tree, data.Q, data.I[1:end, 3],
                         std_noise, mean_θ, std_θ, 40,
                         maxiter=16, regularization=true)
-println(result)
+# println(result)
 #end
