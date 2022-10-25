@@ -1,48 +1,61 @@
 # computes log marginal likelihood of θ given (x, y) based on the Laplace approximation
 # NOTE: the input θ should be an (approximate) local minimum with respect to θ
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ
-function get_probabilities(results::AbstractVector,
-							x::AbstractVector,
-							y::AbstractVector,
-							std_noise::Real,
-							mean_θ::AbstractVector,
-							std_θ::AbstractVector)
+# std_noise is the standard deviation of the noise, can be real number or vector
+# if std_noise is a vector, each element corresponds the std of an element in y
+function get_probabilities(results::AbstractVector{<:Node},
+							x::AbstractVector{<:Real},
+							y::AbstractVector{<:Real},
+							std_noise::RealOrVec,
+							mean_θ::AbstractVector{<:Real},
+							std_θ::AbstractVector{<:Real};
+							objective::AbstractObjective = LeastSquares(),
+							renormalize::Bool = true)
 
-	prob = zeros(length(results))
+	neg_log_prob = zeros(length(results))
 
 	for i in 1:length(results)
 		θ = get_free_params(results[i].phase_model)
 		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
-		prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, "LS")
+		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y,
+								std_noise, full_mean_θ, full_std_θ, objective)
 	end
 
-	prob ./= minimum(prob) * std_noise # Renormalize
-	exp.(-prob) ./ sum(exp.(-prob))
+	if renormalize
+		neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
+	end
+	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
+	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
 end
 
+# λ controls the weight of the least-squares regularization term for KL objective
 function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::AbstractVector,
 								 y::AbstractVector, std_noise::RealOrVec,
-								 mean_θ::RealOrVec, std_θ::RealOrVec, objective::String, λ::Real = 1e-6,
+								 mean_θ::RealOrVec, std_θ::RealOrVec,
+								 objective::AbstractObjective, λ::Real = 1e-6,
 								 verbose::Bool = false)
 	mean_log_θ = log.(mean_θ)
 
-	f = if objective == "LS"
+	f = if objective isa LeastSquares
 			function (log_θ)
 				ls_objective(node.phase_model, log_θ, x, y, std_noise, mean_log_θ, std_θ)
 			end
-		elseif objective == "KL"
+		elseif objective isa KullbackLeilber
 			function (log_θ)
 				kl_objective(node.phase_model, log_θ, x, y, mean_log_θ, std_θ, λ)
 			end
 		end
 
-	θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)]) # tramsform to log space for better conditioning
+	# tramsform to log space for better conditioning
+	θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)])
 	log_θ = θ
+	# IDEA: chek norm of gradient. If it exceeds a threshold, apply fine-tuning.
 	# newton!(f, log_θ)
 	return approximate_negative_log_evidence(f, log_θ, verbose)
 end
 
 # NOTE assumes θ is stationary point of θ (i.e. ∇f = 0)
+# computes approximation to \int exp(-f(θ)) dθ via Laplace approximation
 function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 	# calculate marginal likelihood
 	d = length(θ)
@@ -58,13 +71,10 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 	# println("val: $(val)")
 	# println("rest: $(logdet(Σ) + d * log(2π))")
 	try
-		logdet(Σ)
+		return val - (logdet(Σ) + d * log(2π)) / 2
 	catch DomainError
-		# println("negative det")
 		return 1e8
 	end
-	# println(val) #- (logdet(Σ) - d * log(2π)))
-	return val - (logdet(Σ) - d * log(2π)) #
 end
 
 approximate_evidence(x...) = exp(-approximate_negative_log_evidence(x...))
