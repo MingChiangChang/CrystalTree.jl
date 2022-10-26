@@ -6,11 +6,12 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
     maxiter::Int = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
 
     # TODO: pre-allocate Vector{<:Node}(undef, ...) to avoid thread race condition
-    resulting_nodes = Node[]
     node_order = traversal_func(t)
+    resulting_nodes = Vector{Node}(undef, length(node_order))
+    counter = 0
     for level in 1:t.depth
         nodes = get_nodes_at_level(node_order, level)
-        deleting = Set()
+        deleting = Vector{Vector{Int64}}(undef, length(nodes))
 
         @threads for i in eachindex(nodes)
 
@@ -18,14 +19,22 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
                               mean, std, method=LM,
                               maxiter=maxiter,
                               regularization=regularization)
-            push!(resulting_nodes, Node(nodes[i], phases, x, y))  # FIXME: race condition
+            resulting_nodes[counter + i] = Node(nodes[i], phases, x, y)
 
             if level < t.depth && prunable(phases, x, y, tol)
-                push!(deleting, get_child_node_indicies(nodes[i], node_order)...)  # FIXME: race condition
+                deleting[i] = get_child_node_indicies(nodes[i], node_order)
             end
         end
 
-        node_order = @view node_order[filter!(x->x ∉ deleting, collect(1:size(node_order, 1)))]
+        delete_set = Set()
+        for i in eachindex(deleting)
+            if isdefined(deleting, i)
+                push!(delete_set, deleting[i]...)
+            end
+        end
+
+        counter += length(nodes)
+        node_order = @view node_order[filter!(x->x ∉ delete_set, collect(1:size(node_order, 1)))]
     end
     resulting_nodes
 end

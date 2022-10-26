@@ -83,7 +83,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                  method::OptimizationMethods = LM, objective::String = "LS",
                  maxiter::Integer = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
-    result = Vector{Vector{<:Node}}()
+    result = Vector{Vector{<:Node}}(undef, LT.depth)
     expand!(LT, LT.nodes[1])
 
     start = 1
@@ -100,7 +100,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
             level_result[i] = nodes[i]
         end
 
-        push!(result, level_result)
+        result[level] = level_result
         top_k = get_top_ids(result[level], k)
         if level != LT.depth
             for i in top_k
@@ -134,7 +134,7 @@ end
 function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::AbstractVector, y::AbstractVector, k::Int,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                 maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
-    if size(node)[1] == LT.depth
+    if size(node, 1)  == LT.depth
         push!(result, node)
         return
     end
