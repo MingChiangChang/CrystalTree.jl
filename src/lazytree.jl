@@ -134,7 +134,7 @@ end
 function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::AbstractVector, y::AbstractVector, k::Int,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                 maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
-    if size(node, 1)  == LT.depth
+    if size(node)[1] == LT.depth
         push!(result, node)
         return
     end

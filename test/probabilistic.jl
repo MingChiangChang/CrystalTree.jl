@@ -90,5 +90,5 @@ prob = get_probabilities(results, x, y, std_noise, mean_θ, std_θ, renormalize=
 @test sum(prob) ≈ 1
 @test all(≥(0), prob)
 @test exp.(-neg_log_prob) / sum(exp.(-neg_log_prob)) ≈ prob
-
+println("End of probabilistic.jl test")
 end # TestProbabilistic module

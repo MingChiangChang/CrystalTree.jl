@@ -45,15 +45,15 @@ end
 
 # TODO: find bound error
 @time res = search!(a, bft, x, y, std_noise,
-                    mean_θ, std_θ, pos_res_thresholding, 
+                    mean_θ, std_θ, pos_res_thresholding,
                     maxiter = 64, regularization = true, tol = 1.)
 residual = Float64[]
 
 ind = argmin([norm(i(x)-y) for i in res])
 
 @testset "Basic tree search with trimming" begin
-    @test Set(get_phase_ids(res[ind])) == Set([0, 1]) 
+    @test Set(get_phase_ids(res[ind])) == Set([0, 1])
 end
-
+println("End of tree.jl test")
 end # module
 

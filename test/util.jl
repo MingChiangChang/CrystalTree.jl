@@ -74,5 +74,5 @@ end
     @test top_k_accuracy(answer, gt, 1) == 0.5
     @test top_k_accuracy(answer, gt, 3) == 1.
 end
-
+println("End of util.jl test")
 end # module

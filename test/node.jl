@@ -64,5 +64,5 @@ fake_tree = [root, node1, node2, node3, node4]
     @test get_node_with_id(fake_tree, 0)[1] == node1
     @test get_node_with_id(fake_tree, [0, 1]) == [node1, node2, node3, node4]
 end
-
+println("End of node.jl test")
 end # module

@@ -73,5 +73,5 @@ ind = argmin(res)
 # plot!(x, evaluate!(zero(x), t[ind].phase_model, x))
 # display(plt)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
-
+println("End of lazytree.jl test")
 end

@@ -62,5 +62,5 @@ last_ind = find_first_unassigned(result) - 1
 res = [norm(result[i](x).-y) for i in 1:last_ind]
 ind = argmin(res)
 @test Set(get_phase_ids(result[ind])) == Set([0, 1]) 
-
+println("End of search.jl test")
 end # module
