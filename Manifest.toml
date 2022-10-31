@@ -1,8 +1,8 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.1"
+julia_version = "1.8.0-beta3"
 manifest_format = "2.0"
-project_hash = "3266279290253e76eda505c413ba7497fbdb4f3b"
+project_hash = "a31a4f22647e66cd01d73afc3aaecfbba7c4d630"
 
 [[PrettyTables]]
 deps = ["Crayons", "Formatting", "Markdown", "Reexport", "Tables"]
@@ -31,9 +31,9 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.BackgroundSubtraction]]
 deps = ["CovarianceFunctions", "Distributions", "KroneckerProducts", "LazyInverses", "LinearAlgebra", "SpecialFunctions", "Statistics", "Test"]
-git-tree-sha1 = "66200e153c4f607ce1c1835d1748d51172e6b9dc"
+git-tree-sha1 = "e277cf28ec882b502367a0d0611adfcdb931f771"
 uuid = "9977cdcb-3521-4027-9f3f-3caff6505f42"
-version = "1.1.0"
+version = "1.0.1"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -73,10 +73,10 @@ uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
 version = "0.4.2"
 
 [[deps.CSV]]
-deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "SentinelArrays", "SnoopPrecompile", "Tables", "Unicode", "WeakRefStrings"]
-git-tree-sha1 = "76c8d77a76c564bbc39ae351c075ef3cafceef83"
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings"]
+git-tree-sha1 = "c5fd7cd27ac4aed0acf4b73948f0110ff2a854b2"
 uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-version = "0.10.6"
+version = "0.10.7"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -195,9 +195,9 @@ uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 version = "4.1.1"
 
 [[deps.CrystalShift]]
-deps = ["BackgroundSubtraction", "CSV", "CovarianceFunctions", "DataFrames", "ForwardDiff", "JSON", "LazyInverses", "LinearAlgebra", "NPZ", "OptimizationAlgorithms", "ProgressBars", "Random", "SpecialFunctions", "Test"]
-git-tree-sha1 = "53663392da96c984db61cbde38ee5577a6be51fb"
-repo-rev = "777cc3e359ca4ae8d59fe2d6a6a2df780b68b162"
+deps = ["BackgroundSubtraction", "CSV", "CovarianceFunctions", "DataFrames", "DelimitedFiles", "ForwardDiff", "JSON", "LazyInverses", "LinearAlgebra", "NPZ", "OptimizationAlgorithms", "Plots", "ProgressBars", "Random", "SpecialFunctions", "StatsBase", "Test"]
+git-tree-sha1 = "57cc75de0dbd2cdf0a99b307cbfdd44e7674df1a"
+repo-rev = "EM_noise_std"
 repo-url = "https://github.com/MingChiangChang/CrystalShift.jl"
 uuid = "fb120844-f04e-4a6b-a6eb-278194263097"
 version = "0.1.0"
@@ -458,9 +458,9 @@ version = "0.5.1"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
-git-tree-sha1 = "db619c421554e1e7e07491b85a8f4b96b3f04ca0"
+git-tree-sha1 = "a62189e59d33e1615feb7a48c0bea7c11e4dc61d"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
-version = "1.2.2"
+version = "1.3.0"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -593,7 +593,7 @@ version = "0.6.3"
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "7.84.0+0"
+version = "7.81.0+0"
 
 [[deps.LibGit2]]
 deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
@@ -836,7 +836,7 @@ version = "0.10800.600+0"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.40.0+0"
+version = "10.36.0+2"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
@@ -930,9 +930,9 @@ version = "5.15.3+1"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "3c009334f45dfd546a16a57960a821a1a023d241"
+git-tree-sha1 = "97aa253e65b784fd13e83774cadc95b38011d734"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.5.0"
+version = "2.6.0"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1340,7 +1340,7 @@ version = "0.9.4"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.12+3"
+version = "1.2.12+1"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1369,7 +1369,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.1.1+0"
+version = "5.1.0+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1392,12 +1392,12 @@ version = "1.3.7+1"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.48.0+0"
+version = "1.41.0+1"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.4.0+0"
+version = "16.2.1+1"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]

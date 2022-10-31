@@ -81,7 +81,7 @@ end
 # O(kn) method
 function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
-                 method::OptimizationMethods = LM, objective::String = "LS",
+                 method::OptimizationMethods = LM, objective::String = "LS", optimize_mode::OptimizationMode = Simple,
                  maxiter::Integer = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
     result = Vector{Vector{<:Node}}(undef, LT.depth)
     expand!(LT, LT.nodes[1])
@@ -94,8 +94,9 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
 
         @threads for i in eachindex(nodes)
             pm = optimize!(nodes[i].phase_model, x, y, std_noise, mean, std,
-                           method=method, objective=objective, maxiter=maxiter,
-                           regularization=regularization, tol=tol)
+                           method = method, objective = objective, maxiter = maxiter,
+                           optimize_mode = optimize_mode,
+                           regularization = regularization, tol = tol)
             nodes[i] = Node(nodes[i], pm, x, y, true)
             level_result[i] = nodes[i]
         end
@@ -122,7 +123,8 @@ function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
     @threads for i in eachindex(result)
         if !result[i].is_optimized
             optimize!(result[i].phase_model, x, y, std_noise, mean, std,
-                          method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
+                          method = LM, optimize_mode = optimize_mode,
+                          maxiter = maxiter, regularization = regularization, tol = tol)
             result[i] = Node(result[i], pm, x, y, true)
         end
     end
@@ -142,7 +144,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
     child_nodes = expand!(LT, node)
     @threads for i in eachindex(child_nodes)
         pm = optimize!(child_nodes[i].phase_model, x, y, std_noise, mean, std,
-                          method=LM, maxiter=maxiter, regularization=regularization, tol=tol)
+                          method=LM, optimize_mode=Simple, maxiter=maxiter, regularization=regularization, tol=tol)
         child_nodes[i] = Node(child_nodes[i], pm, x, y, true)
     end
 

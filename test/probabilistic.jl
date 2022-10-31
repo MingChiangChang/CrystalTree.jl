@@ -48,7 +48,7 @@ y /= maximum(y)  # normalize targets
 method = LM
 objective = CrystalTree.LeastSquares()
 results = res_bfs(tree, x, y, std_noise, mean_θ, std_θ, 15,
-                        method=method, objective=objective,
+                        method=method, objective=objective, optimize_mode=Simple,
                         maxiter=1000, regularization=true)
 
 num_nodes = find_first_unassigned(results) - 1

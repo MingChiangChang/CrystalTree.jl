@@ -19,11 +19,13 @@ using Plots
 # TODO: test some of the hyperparams
 # IDEA: Use the simpliest setup(Lorentz, no peak mod and background)
 
-noise_level = 0.1
+noise_level = 0.01
 
-std_noise = [.09, .07, .05, .03, .01]
-mean_θ = [1., 1., .1]
-std_θ = [0.05, 5., .3]
+# std_noise = [.09, .07, .05, .03, .01]
+std_noises = [.05]#, .06, .07]
+mean_θ = [1., .5, .1]
+std_θ =  [0.05,0.05,0.05]
+# std_θ = [0.05, 5., .3]
 
 for std_noise in std_noises
 
@@ -183,7 +185,7 @@ for std_noise in std_noises
             legend=false, figsize=(10,10), dpi=300,
             xlims=(0, 1), ylims=(0, 1), xtickfontsize=10, ytickfontsize=10,
             xlabelfontsize=12, ylabelfontsize=12, markersize=5,
-            title="Noise=0.1_k=$(k)\nstd_noise=$(std_noise), noise_level=$(noise_level)\n mean=$(mean_θ)\n std=$(std_θ) runs=$(runs)\n accuracy=$(correct_count/runs)")
+            title="k=$(k)\nstd_noise=$(std_noise), noise_level=$(noise_level)\n mean=$(mean_θ)\n std=$(std_θ) runs=$(runs)\n accuracy=$(correct_count/runs)")
     calibration = correct ./ totl
     for i in eachindex(calibration)
         if isnan(calibration[i])
@@ -207,6 +209,7 @@ for std_noise in std_noises
     t["runs"] = runs
     t["accuracy"] = correct_count/runs
     t["totl"] = totl
+    t["totl_prob"] = totl_prob
     t["correct"] = correct
     t["phase_correct"] = phase_correct
     t["phase_totl"] = phase_totl
@@ -214,7 +217,7 @@ for std_noise in std_noises
     using JSON
     using Dates
 
-    open("Noise=0.1_test_$(Dates.format(now(), "yyyy-mm-dd_HH:MM")).json", "w") do f
+    open("test_$(Dates.format(now(), "yyyy-mm-dd_HH:MM")).json", "w") do f
         JSON.print(f, t)
     end
 end

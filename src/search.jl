@@ -16,7 +16,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         @threads for i in eachindex(nodes)
 
             phases = optimize!(nodes[i].phase_model, x, y, std_noise,
-                              mean, std, method=LM,
+                              mean, std, method=LM, optimize_mode=Simple,
                               maxiter=maxiter,
                               regularization=regularization)
             resulting_nodes[counter + i] = Node(nodes[i], phases, x, y)
@@ -78,6 +78,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
                          max_search::Int;
                          method::OptimizationMethods = LM,
                          objective::AbstractObjective = LeastSquares(),
+                         optimize_mode::OptimizationMode = Simple,
                          maxiter::Int=32, regularization::Bool=false, tol::Real = DEFAULT_TOL)
     # TODO: if method = LM but objective is not LeastSquares, raise warning and use Newton.
     first_level_nodes = get_nodes_at_level(tree.nodes, 1)
@@ -95,7 +96,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, y::AbstractVector,
         end
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].phase_model, x, y, std_noise,
-                  mean_θ, std_θ, method=method, objective=string(objective),
+                  mean_θ, std_θ, method=method, objective=string(objective), optimize_mode=optimize_mode,
                   maxiter=maxiter, regularization=regularization)
             ranked_nodes[i] = Node(ranked_nodes[i], phases, x, y)
         end
@@ -107,7 +108,7 @@ end
 function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
                 std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
                 max_search::AbstractArray; maxiter::Int=32, regularization::Bool=false,
-                method::OptimizationMethods = LM, objective::AbstractObjective = LeastSquares())
+                method::OptimizationMethods = LM, objective::AbstractObjective = LeastSquares(), optimize_mode::OptimizationMode = Simple)
     # TODO: if method = LM but objective is not LeastSquares, raise warning and use Newton.
     searched_node = Vector{Node}(undef, sum(max_search))
     for level in 1:tree.depth
@@ -122,7 +123,7 @@ function bestfirstsearch(tree::Tree, x::AbstractVector, r::AbstractVector,
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].phase_model, x, y, std_noise,
                                mean_θ, std_θ,
-                               method=method, objective=string(objective),
+                               method=method, objective=string(objective), optimize_mode=optimize_mode,
                                maxiter=maxiter, regularization=regularization)
 
             ranked_nodes[i] = Node(ranked_nodes[i], phases, x, y, true)
@@ -148,10 +149,13 @@ end
 
 # residual-bestfirstsearch functions
 function res_bfs(tree::Tree, x::AbstractVector, y::AbstractVector,
-    std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
-    max_search::Int; method::OptimizationMethods = LM,
-    objective::AbstractObjective = LeastSquares(),
-    maxiter::Int=32, regularization::Bool=false)
+                std_noise::Real, mean_θ::AbstractVector, std_θ::AbstractVector,
+                max_search::Int;
+                method::OptimizationMethods = LM,
+                objective::AbstractObjective = LeastSquares(),
+                 optimize_mode::OptimizationMode = Simple,
+                maxiter::Int=32, regularization::Bool=false)
+
     first_level_nodes = get_nodes_at_level(tree.nodes, 1)
     num_of_phases = size(first_level_nodes, 1)
     searched_node = Vector{Node}(undef, num_of_phases + max_search*(tree.depth-1) )
@@ -167,7 +171,8 @@ function res_bfs(tree::Tree, x::AbstractVector, y::AbstractVector,
 
         @threads for i in 1:num_search
             phases = optimize!(ranked_nodes[i].phase_model, x, y, std_noise,
-            mean_θ, std_θ, method=LM, maxiter=maxiter, regularization=regularization)
+                                mean_θ, std_θ, method=LM, objective=string(objective), optimize_mode=optimize_mode,
+                                maxiter=maxiter, regularization=regularization)
             ranked_nodes[i] = Node(ranked_nodes[i], phases, x, y)
         end
     record_node!(searched_node, ranked_nodes[1:num_search])
@@ -184,7 +189,7 @@ function rank_nodes_with_res_at_level(tree::Tree, level::Int, x::AbstractVector,
         for node in optimized_nodes_from_previous_level
             for cn in node.child_node
                 cn = Node(cn.phase_model, cn.child_node, cn.id, cn.recon, cn.residual,
-                cos_angle(cn(x), node.residual),
+                            cos_angle(cn(x), node.residual),
                 false)
             end
         end

@@ -10,7 +10,8 @@ using NPZ
 using Plots
 
 # std_noise = .01
-std_noises = [.01, .03, .05, .07, .09]
+# std_noises = [.01, .03, .05, .07, .09]
+std_noises = [.03, .04, .05, 0.06, 0.07]
 mean_θ = [1., .5, .1]
 std_θ = [.05, .05, .05]
 
@@ -61,7 +62,7 @@ for std_noise in std_noises
     # std_θ = [0.05, 5., .3]
 
     test_path = "/Users/ming/Desktop/Code/CrystalShift.jl/data/calibration/sticks.csv"
-    data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data.npy"
+    data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data_nl=1e-1.npy"
     test_data = npzread(data_path)
     f = open(test_path, "r")
 
@@ -170,8 +171,8 @@ for std_noise in std_noises
 
     plot!(collect(0.05:.1: 0.95), calibration)
     scatter!(collect(0.05:.1: 0.95), calibration)
-    # plot!(totl_prob ./ totl, calibration)
-    # scatter!(totl_prob ./ totl, calibration)
+    plot!(totl_prob ./ totl, calibration)
+    scatter!(totl_prob ./ totl, calibration)
 
     font(20)
     xlabel!("Predicted probabilities")
@@ -199,8 +200,8 @@ for std_noise in std_noises
     plot!(collect(0.05:.1: 0.95), calibration)
     scatter!(collect(0.05:.1: 0.95), calibration)
 
-    # plot!(totl_prob ./ totl, calibration)
-    # scatter!(totl_prob ./ totl, calibration)
+    plot!(totl_prob ./ totl, calibration)
+    scatter!(totl_prob ./ totl, calibration)
 
     font(20)
     xlabel!("Predicted phase probabilities")
@@ -217,12 +218,13 @@ for std_noise in std_noises
     t["totl"] = totl
     t["correct"] = correct
     t["phase_correct"] = phase_correct
+    t["totl_prob"] = totl_prob
     t["phase_totl"] = phase_totl
 
     using JSON
     using Dates
 
-    open("test_$(Dates.format(now(), "yyyy-mm-dd_HH:MM")).json", "w") do f
+    open("Noise=0.1_test_$(Dates.format(now(), "yyyy-mm-dd_HH:MM")).json", "w") do f
         JSON.print(f, t)
     end
 end
