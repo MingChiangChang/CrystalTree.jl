@@ -196,8 +196,8 @@ version = "4.1.1"
 
 [[deps.CrystalShift]]
 deps = ["BackgroundSubtraction", "CSV", "CovarianceFunctions", "DataFrames", "DelimitedFiles", "ForwardDiff", "JSON", "LazyInverses", "LinearAlgebra", "NPZ", "OptimizationAlgorithms", "Plots", "ProgressBars", "Random", "SpecialFunctions", "StatsBase", "Test"]
-git-tree-sha1 = "57cc75de0dbd2cdf0a99b307cbfdd44e7674df1a"
-repo-rev = "EM_noise_std"
+git-tree-sha1 = "a21cff0be4c6809307e59c66bbaa7a085c9889dd"
+repo-rev = "main"
 repo-url = "https://github.com/MingChiangChang/CrystalShift.jl"
 uuid = "fb120844-f04e-4a6b-a6eb-278194263097"
 version = "0.1.0"
