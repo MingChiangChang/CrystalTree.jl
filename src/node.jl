@@ -58,9 +58,8 @@ function Node(node::Node, PM::PhaseModel,
               x::AbstractVector, y::AbstractVector, isOptimized::Bool = true)
 	check_same_phase(node, PM) || error("Phases must be the same as in the node")
 	recon = PM(x)
-	
-	Node(PM, node.child_node, node.id, 
-	recon, y.-recon, cos_angle(recon, y), isOptimized)
+	Node(PM, node.child_node, node.id,
+	     recon, y.-recon, cos_angle(recon, y), isOptimized)
 end
 
 function Node(PM::PhaseModel, child_nodes::AbstractVector, id::Int64,

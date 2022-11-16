@@ -1,17 +1,19 @@
 using CrystalShift
 using CrystalTree
-using CrystalTree: Lazytree, search!, approximate_negative_log_evidence, get_phase_ids
+using CrystalTree: Lazytree, search!, approximate_negative_log_evidence, get_phase_ids, LeastSquares
 using CrystalShift: Lorentz, get_free_lattice_params, extend_priors, get_free_params
 using Combinatorics
 using ProgressBars
 using Measurements
 using NPZ
 
+using StatsBase
 using Plots
 
 # std_noise = .01
 # std_noises = [.01, .03, .05, .07, .09]
-std_noises = [.03, .04, .05, 0.06, 0.07]
+# std_noises = [.03, .04, .05, 0.06, 0.07]
+std_noises = [.05]
 mean_θ = [1., .5, .1]
 std_θ = [.05, .05, .05]
 
@@ -27,10 +29,13 @@ for std_noise in std_noises
             θ = get_free_params(results[i].phase_model)
             # println(θ)
             # orig = [p.origin_cl for p in result[i].phase_model]
+            global std_n = std(y .- evaluate!(zero(x), results[i].phase_model, x))
             full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
-            prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, "LS")
+            # TODO: Taking each std_n will mess up the accuracy Reasons??
+            prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, LeastSquares()) / std_noise
         end
-        prob ./= minimum(prob) * std_noise
+        prob ./= minimum(prob) 
+        # prob ./= std_noise
         exp.(-prob) ./ sum(exp.(-prob))
     end
 
@@ -87,7 +92,7 @@ for std_noise in std_noises
     phase_totl = zeros(Int64, 10)
 
     k = 2
-    runs = 100000
+    runs = 1000
     correct_count = 0
 
     for i in tqdm(1:runs)
@@ -104,7 +109,8 @@ for std_noise in std_noises
         LT = Lazytree(cs, k, x, 5, s)
 
         results = search!(LT, x, y, k, std_noise, mean_θ, std_θ,
-                        method=LM, objective="LS", maxiter=256,
+                        method=LM, objective="LS", optimize_mode=EM,
+                        maxiter=256, em_loop_num=4,
                         regularization=true)
         results = reduce(vcat, results)
         probs = get_probabilities(results, x, y, mean_θ, std_θ)

@@ -36,4 +36,4 @@ p2 = bar(collect(0.05:0.1:0.95), log10.(totl), xlim=(0, 1), ylim=(1, 6.5), bar_w
 plt = plot(p1, p2, layout=(2, 1), legend=false, xlabel="Predicted Probabilities", ylabel="Number of tests in log₁₀")
 plot!(xtickfontsize=10, ytickfontsize=10, xlabelfontsize=12, ylabelfontsize=12, markersize=5, 
       left_margin=5Plots.mm, bottom_margin=5Plots.mm, framestyle = :box)
-display(plt)
+display(p1)

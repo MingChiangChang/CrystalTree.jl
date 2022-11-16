@@ -81,7 +81,8 @@ end
 # O(kn) method
 function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
-                 method::OptimizationMethods = LM, objective::String = "LS", optimize_mode::OptimizationMode = Simple,
+                 method::OptimizationMethods = LM, objective::String = "LS",
+                 optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
                  maxiter::Integer = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
     result = Vector{Vector{<:Node}}(undef, LT.depth)
     expand!(LT, LT.nodes[1])
@@ -95,8 +96,12 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
         @threads for i in eachindex(nodes)
             pm = optimize!(nodes[i].phase_model, x, y, std_noise, mean, std,
                            method = method, objective = objective, maxiter = maxiter,
-                           optimize_mode = optimize_mode,
+                           optimize_mode = optimize_mode, em_loop_num=em_loop_num,
                            regularization = regularization, tol = tol)
+            # println(pm)
+            if pm isa Tuple
+                pm = pm[1]
+            end
             nodes[i] = Node(nodes[i], pm, x, y, true)
             level_result[i] = nodes[i]
         end
