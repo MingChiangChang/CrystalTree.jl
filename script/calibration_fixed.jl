@@ -1,6 +1,6 @@
 using CrystalShift
 using CrystalTree
-using CrystalTree: Lazytree, search!, approximate_negative_log_evidence, get_phase_ids, LeastSquares
+using CrystalTree: Lazytree, search!, approximate_negative_log_evidence, get_phase_ids, LeastSquares, get_probabilities
 using CrystalShift: Lorentz, get_free_lattice_params, extend_priors, get_free_params
 using Combinatorics
 using ProgressBars
@@ -19,25 +19,25 @@ std_θ = [.05, .05, .05]
 
 for std_noise in std_noises
 
-    function get_probabilities(results::AbstractVector,
-                            x::AbstractVector,
-                            y::AbstractVector,
-                            mean_θ::AbstractVector,
-                            std_θ::AbstractVector)
-        prob = zeros(length(results))
-        for i in 1:length(results)
-            θ = get_free_params(results[i].phase_model)
-            # println(θ)
-            # orig = [p.origin_cl for p in result[i].phase_model]
-            global std_n = std(y .- evaluate!(zero(x), results[i].phase_model, x))
-            full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
-            # TODO: Taking each std_n will mess up the accuracy Reasons??
-            prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, LeastSquares()) / std_noise
-        end
-        prob ./= minimum(prob) 
-        # prob ./= std_noise
-        exp.(-prob) ./ sum(exp.(-prob))
-    end
+    # function get_probabilities(results::AbstractVector,
+    #                         x::AbstractVector,
+    #                         y::AbstractVector,
+    #                         mean_θ::AbstractVector,
+    #                         std_θ::AbstractVector)
+    #     prob = zeros(length(results))
+    #     for i in 1:length(results)
+    #         θ = get_free_params(results[i].phase_model)
+    #         # println(θ)
+    #         # orig = [p.origin_cl for p in result[i].phase_model]
+    #         global std_n = std(y .- evaluate!(zero(x), results[i].phase_model, x))
+    #         full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
+    #         # TODO: Taking each std_n will mess up the accuracy Reasons??
+    #         prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, LeastSquares()) / std_noise
+    #     end
+    #     prob ./= minimum(prob)
+    #     # prob ./= std_noise
+    #     exp.(-prob) ./ sum(exp.(-prob))
+    # end
 
     function get_bin(prob)
         if isnan(prob)
@@ -92,10 +92,10 @@ for std_noise in std_noises
     phase_totl = zeros(Int64, 10)
 
     k = 2
-    runs = 1000
+    runs = 1000 
     correct_count = 0
 
-    for i in tqdm(1:runs)
+    for i in 1:runs # tqdm(1:runs)
         # test_comb = comb[rand(1:length(comb), 1)][1]
         cs = Vector{CrystalPhase}(undef, size(s))
         cs = @. CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
@@ -110,10 +110,11 @@ for std_noise in std_noises
 
         results = search!(LT, x, y, k, std_noise, mean_θ, std_θ,
                         method=LM, objective="LS", optimize_mode=EM,
-                        maxiter=256, em_loop_num=4,
+                        maxiter=256, em_loop_num=2,
                         regularization=true)
         results = reduce(vcat, results)
-        probs = get_probabilities(results, x, y, mean_θ, std_θ)
+        probs = get_probabilities(results, x, y, std_noise, mean_θ, std_θ)
+        println(probs)
 
         prob_of_phase = zeros(Float64, 5)
         for j in eachindex(results)

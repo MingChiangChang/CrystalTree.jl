@@ -64,7 +64,7 @@ function recall(; answer, ground_truth, verbose::Bool=false)
         println("fn: $(fn)")
         println("recall: $(recall)")
     end
-    
+
     return recall
 end
 
@@ -77,6 +77,8 @@ function get_phase_number(str::String)
         return 3
     elseif str == "Li Al5 O8_P4332"
         return 4
+    elseif str == "LiAlO2_R-3mH"
+        return 5
     elseif str == "Li Fe O2_R-3m"
         return 6
     else return 7
@@ -90,7 +92,9 @@ function get_ground_truth(str::AbstractVector)
 
     for i in eachindex(str)
         sol = split(str[i], ",")
-        gt[i, 1:end-1] = cast(sol, Int64)[2:end]
+        t = cast(sol, Float64)[2:end]
+        gt[i, 1:end-1] = Int64.(t.>0)
+        # gt[i, 1:end-1] = cast(sol, Int64)[2:end]
         gt[i, end] = 0
     end
 

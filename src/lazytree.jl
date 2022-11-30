@@ -71,7 +71,7 @@ function is_allowed_new_phase(LT::Lazytree, node::Node, phase::AbstractPhase)
     return phase.id ∉ get_phase_ids(node) && Set(vcat(current_phases, new_phase)) ∉ LT.phase_combinations
 end
 
-# If having immutable nodes are largely advantageous, try creating all possible nodes 
+# If having immutable nodes are largely advantageous, try creating all possible nodes
 # and then so subarray for child nodes
 # OR should we keep having child node recorded in nodes?????
 function attach_child_nodes!(node::Node, child_nodes::AbstractVector{<:Node})

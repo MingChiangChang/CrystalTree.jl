@@ -7,6 +7,7 @@ using CrystalShift: get_free_params, extend_priors, OptimizationMode
 
 import CrystalShift: get_phase_ids
 
+using StatsBase
 using LazyInverses
 using OptimizationAlgorithms
 using CovarianceFunctions: EQ

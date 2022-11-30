@@ -1,17 +1,24 @@
 using ProgressBars
-using DelimitedFiles
 
 using CrystalTree
 using CrystalTree: bestfirstsearch, approximate_negative_log_evidence, find_first_unassigned
-using CrystalTree: Lazytree, search_k2n!, search!, precision, recall
-using CrystalTree: get_phase_number, get_ground_truth
+using CrystalTree: Lazytree, search_k2n!, search!, cast, LeastSquares
+using CrystalTree: get_phase_number, get_ground_truth, precision, recall
+using CrystalTree: in_top_k, top_k_accuracy
 using CrystalShift
 using CrystalShift: get_free_params, extend_priors, Lorentz, evaluate_residual!, PseudoVoigt
 using CrystalShift: Gauss, FixedPseudoVoigt
-
+# using PhaseMapping: load
 using Plots
 using LinearAlgebra
+using Base.Threads
+using DelimitedFiles
+using NPZ
 
+# std_noise = 9e-3
+# mean_θ = [1., 1., .2]
+# std_θ = [0.005, 1., .05]
+# top 5: 83% std_θ = [0.005, .2, .05]
 struct SpectroscopicData{T<:Real, DT, CT, QT<:AbstractArray{T}, IT<:AbstractArray{T}}
     # string description of data
     elements::Vector{<:AbstractString}
@@ -180,23 +187,22 @@ function load(name, datadir = "/Users/sebastianament/Documents/SEA/XRD Analysis/
     end
     Data, Sticks = _read(dir, filename, sticksname)
 end
+std_noise = 5e-3
+mean_θ = [1., .5, .5]
+std_θ = [0.05, 1., .05]
 
-
-
-std_noise = 1e-2
-mean_θ = [1., 1., .1] # Set to favor true solution
-std_θ = [0.2, .5, 1.]
 
 method = LM
-objective = "LS"
-improvement = 0.1
-# test_path = "C:\\Users\\r2121\\Downloads\\AlLiFeO\\sticks.csv"
-test_path = "/Users/ming/Downloads/AlLiFeO/sticks.csv"
-# test_path = "/Users/ming/Downloads/cif/sticks.csv"
+objective = LeastSquares()
+
+K = 5
+
+test_path = "/Users/ming/Downloads/AlLiFeO_new/sticks.csv"
+# test_path = "/Users/ming/Desktop/Code/CrystalShift.jl/data/AlLiFeO/sticks_2.csv"
 f = open(test_path, "r")
 
 if Sys.iswindows()
-    s = split(read(f, String), "#\n") # Windows: #\r\n ...
+    s = split(read(f, String), "#\r\n") # Windows: #\r\n ...
 else
     s = split(read(f, String), "#\n")
 end
@@ -205,15 +211,103 @@ if s[end] == ""
     pop!(s)
 end
 
+
 cs = Vector{CrystalPhase}(undef, size(s))
-cs = @. CrystalPhase(String(s), (0.1, ), (FixedPseudoVoigt(0.01), ))
+cs = @. CrystalPhase(String(s), (0.1, ), (Gauss()), )
 # println("$(size(cs, 1)) phase objects created!")
 max_num_phases = 3
 data, _ = load("AlLiFe", "/Users/ming/Downloads/")
-# data, _ = load("AlLiFe", "C:\\Users\\r2121\\Downloads\\")
 x = data.Q
+# x = x[1:400]
 
-for i in 1:231
-    plt = plot(x, data.I[:, i], title="$(i)")
+d = npzread("data/AlLiFeO/alfeli.npy")
+result_node = Vector{Vector{Node}}()
+
+# for i in 1:231
+#     plt = plot(x, d[i, :], title="$(i)")
+#     plot!(x, data.I[:,i]/maximum(data.I[:,i]))
+#     display(plt)
+# end
+
+function node_under_improvement_constraint(nodes, improvement, x, y)
+
+    min_res = (Inf, 1)
+    for i in eachindex(nodes)
+        copy_y = copy(y)
+        res = norm(evaluate_residual!(nodes[i].phase_model, x, copy_y))
+        # println("$(i): $(res), $(min_res[1])")
+        if min_res[1] - res > improvement
+            min_res = (res, i)
+        end
+    end
+    return  nodes[min_res[2]]
+end
+
+sol_path = "data/AlLiFeO/sol.txt"
+sol = open(sol_path, "r")
+
+t = split(read(sol, String), "\n")
+gt = get_ground_truth(t)
+# println(gt)
+answer = zeros(Int64, (length(t), K, 7))
+
+# for y in ProgressBar(eachcol(data.I[:,175:175]))
+for i in tqdm(eachindex(t))
+    solution = split(t[i], ",")
+    col = parse(Int, solution[1])
+    # y = data.I[1:400,col]
+    # y /= maximum(y)
+    d[i, :] ./= maximum(d[i, :])
+    y = d[i, :] #, 1:400]
+
+    tree = Lazytree(cs, max_num_phases, x, 5, s, false)
+    result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
+                        #method=method, objective = objective,
+                        maxiter=512, regularization=true) #, verbose = true) # should return a bunch of node
+    result = vcat(result...)
+    # println(typeof(result))
+    # println(size(result))
+    prob = Vector{Float64}(undef, length(result))
+    @threads for i in eachindex(result)
+        θ = get_free_params(result[i].phase_model)
+        full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, result[i].phase_model.CPs)
+        prob[i] = approximate_negative_log_evidence(result[i], θ, x, y, std_noise, full_mean_θ, full_std_θ, objective, true)
+    end
+
+    lowest = sortperm(prob)[1:K]
+    i_min = lowest[1]
+    plt = plot(x, y, label="Original", title="$(i)")
+    plot!(x, result[i_min](x), label="Optimized")
     display(plt)
+    push!(result_node, result[lowest])
+end
+
+for i in eachindex(result_node)
+    one_phase_answer = zeros(Int64, (K, 7))
+    for j in eachindex(result_node[i])
+        re = zeros(Int64, 7)
+        for k in eachindex(result_node[i][j].phase_model.CPs)
+            re[get_phase_number(result_node[i][j].phase_model.CPs[k].name)] += 1
+        end
+        one_phase_answer[j, :] = re
+    end
+    answer[i, :, :] = one_phase_answer
+    # println(t[i])
+    # println("$(i): $(one_phase_answer)")
+end
+
+using JSON, Dates
+d = Dict{String, Any}()
+d["std_noise"] = std_noise
+d["std_theta"] = std_θ
+d["mean_theta"] = mean_θ
+d["top_1_acc"] = top_k_accuracy(answer, gt, 1)
+d["top_5_acc"] = top_k_accuracy(answer, gt, 5)
+d["answer"] = answer
+d["gt"] = gt
+d["precision"] = precision(answer=answer[:,1,:], ground_truth=gt, verbose=false)
+d["recll"] = recall(answer=answer[:,1,:], ground_truth=gt, verbose=false)
+
+open("alfelio_$(Dates.format(now(), "yyyy-mm-dd_HH:MM")).json", "w") do f
+    JSON.print(f, d)
 end
