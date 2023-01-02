@@ -69,17 +69,17 @@ function recall(; answer, ground_truth, verbose::Bool=false)
 end
 
 function get_phase_number(str::String)
-    if str == "Al2 O3_R-3c"
+    if str == "Al2O3_R-3cH"
         return 1
-    elseif str == "Li2 O_Fm-3m"
+    elseif str == "Li2O_Fm-3m"
         return 2
-    elseif str == "Fe2 O3_R-3cH"
+    elseif str == "Fe2O3_R-3cH"
         return 3
-    elseif str == "Li Al5 O8_P4332"
+    elseif str == "LiAl5O8_P4332"
         return 4
     elseif str == "LiAlO2_R-3mH"
         return 5
-    elseif str == "Li Fe O2_R-3m"
+    elseif str == "LiFeO2_R-3mH"
         return 6
     else return 7
     end
