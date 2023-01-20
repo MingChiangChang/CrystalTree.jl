@@ -1,26 +1,24 @@
 struct Lazytree{NS<:AbstractVector{<:Node},
                 AS<:AbstractSet,
                 CP<:AbstractVector{<:AbstractPhase},
-                DP<:Int,
                 AR<:AbstractVector,
                 L<:Real,
                 S<:AbstractVector} <: AbstractTree
     nodes::NS
     phase_combinations::AS # Keeping track of phase combinations
     phases::CP
-    depth::DP
     x::AR
     l::L
     _str::S
 end
 
-function Lazytree(CPs::AbstractVector{<:AbstractPhase}, depth::Int,
+function Lazytree(CPs::AbstractVector{<:AbstractPhase},
                   x::AbstractVector, l::Real, _str::AbstractVector{<:AbstractString}, background::Bool=false)
     if background
         bg = BackgroundModel(x, EQ(), l, 0., rank_tol=1e-3)
-        return Lazytree(Node[Node(bg)], Set(), CPs, depth, x, l, _str)
+        return Lazytree(Node[Node(bg)], Set(), CPs, x, l, _str)
     else
-        return Lazytree(Node[Node()], Set(), CPs, depth, x, l, _str)
+        return Lazytree(Node[Node()], Set(), CPs, x, l, _str)
     end
 end
 
@@ -79,17 +77,49 @@ function attach_child_nodes!(node::Node, child_nodes::AbstractVector{<:Node})
 end
 
 # O(kn) method
-function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
-                 std_noise::Real, mean::AbstractVector, std::AbstractVector;
-                 method::OptimizationMethods = LM, objective::String = "LS",
-                 optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
-                 maxiter::Integer = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
-    result = Vector{Vector{<:Node}}(undef, LT.depth)
+function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
+                 ts_stn::TreeSearchSettings)
+    depth, k = ts_stn.depth, ts_stn.k
+    result = Vector{Vector{<:Node}}(undef, depth)
     expand!(LT, LT.nodes[1])
 
     start = 1
 
-    for level in 1:LT.depth
+    for level in 1:depth
+        nodes = get_nodes_at_level(LT, level)
+        level_result = Vector{Node}(undef, length(nodes))
+
+        @threads for i in eachindex(nodes)
+            pm = optimize!(nodes[i].phase_model, x, y, ts_stn.opt_stn)
+            if pm isa Tuple
+                pm = pm[1]
+            end
+            nodes[i] = Node(nodes[i], pm, x, y, true)
+            level_result[i] = nodes[i]
+        end
+
+        result[level] = level_result
+        top_k = get_top_ids(result[level], k)
+        if level != depth
+            for i in top_k
+                expand!(LT, i)
+            end
+        end
+    end
+end
+
+# TODO: Remove this and only keep those using Setting objects
+function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, depth::Integer, k::Integer,
+                 std_noise::Real, mean::AbstractVector, std::AbstractVector;
+                 method::OptimizationMethods = LM, objective::String = "LS",
+                 optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
+                 maxiter::Integer = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
+    result = Vector{Vector{<:Node}}(undef, depth)
+    expand!(LT, LT.nodes[1])
+
+    start = 1
+
+    for level in 1:depth
         nodes = get_nodes_at_level(LT, level)
         level_result = Vector{Node}(undef, length(nodes))
 
@@ -108,7 +138,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
 
         result[level] = level_result
         top_k = get_top_ids(result[level], k)
-        if level != LT.depth
+        if level != depth
             for i in top_k
                 expand!(LT, i)
             end
@@ -119,11 +149,11 @@ end
 
 # O(k^2 n) method
 # expand the node and recussively call search_k2n on the top-k nodes
-function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, k::Int,
+function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, depth::Integer, k::Integer,
                     std_noise::Real, mean::AbstractVector, std::AbstractVector;
                 maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
     result = Vector{Node}()
-    search_k2n!(result, LT, LT.nodes[1], x, y, k, std_noise, mean, std,
+    search_k2n!(result, LT, LT.nodes[1], x, y, depth, k, std_noise, mean, std,
                maxiter=maxiter, regularization=regularization, tol=tol)
     @threads for i in eachindex(result)
         if !result[i].is_optimized
@@ -138,10 +168,12 @@ end
 
 # Doing a mixed version of depth-first search and breadth-first search
 # doing best-first strategy at each level than dig futher down
-function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::AbstractVector, y::AbstractVector, k::Int,
+function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::AbstractVector, y::AbstractVector, 
+                  depth::Integer, k::Integer,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                 maxiter = 32, regularization::Bool = true, tol::Real = DEFAULT_TOL)
-    if size(node)[1] == LT.depth
+
+    if size(node)[1] == depth
         push!(result, node)
         return
     end
@@ -157,7 +189,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
 
     top_k = get_top_ids(child_nodes, k)
     for j in eachindex(top_k)
-        search_k2n!(result, LT, top_k[j], x, y, k,
+        search_k2n!(result, LT, top_k[j], x, y, depth, k,
                 std_noise, mean, std;
                 maxiter=maxiter, regularization=regularization, tol=tol)
     end

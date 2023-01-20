@@ -37,7 +37,7 @@ x = LinRange(8, 45, 512)
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
 #collect(x)
-LT = Lazytree(cs, 2, x, 5, s)
+LT = Lazytree(cs, x, 5, s)
 
 test_pm1 = add_phase(LT.nodes[1].phase_model, cs[1], x, 5)
 test_pm2 = add_phase(test_pm1, cs[2], x, 5)
@@ -53,18 +53,18 @@ attach_child_nodes!(LT.nodes[1], child_nodes)
 push!(LT.nodes, child_nodes...)
 t = expand!(LT, LT.nodes[1].child_node[2])
 
-LT = Lazytree(cs, 2, x, 20, s, true)
+LT = Lazytree(cs,  x, 20, s, true)
 
 noise_intensity = 0.1
 noise = noise_intensity.*(1 .+ sin.(0.2x))
 @. y += noise
 
 
-t = search!(LT, x, y, 10, std_noise, mean_θ, std_θ,
+t = search!(LT, x, y, 2, 10, std_noise, mean_θ, std_θ,
                   maxiter=64, regularization=true)
 
-LT = Lazytree(cs, 2, x, 20, s, true)
-@time t = search_k2n!(LT, x, y, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
+LT = Lazytree(cs, x, 20, s, true)
+@time t = search_k2n!(LT, x, y, 2, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
 # t = reduce(vcat, t)
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)

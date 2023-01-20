@@ -72,10 +72,10 @@ function get_probabilities(results::AbstractVector{<:Node},
 		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y,
 				                                            full_mean_θ, full_std_θ, objective) * θ[end]^2
 	end
-
-	# if renormalize
-    # 	neg_log_prob ./= minimum(neg_log_prob) #* std_noise # renormalize
-	# end
+    # println(minimum(neg_log_prob))
+	if renormalize
+    	neg_log_prob .-= minimum(neg_log_prob)# renormalize
+	end
 	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
 	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
 end
@@ -142,11 +142,11 @@ function approximate_negative_log_evidence(f, θ, verbose::Bool = false)
 	val = f(θ)
 	H = ForwardDiff.hessian(f, θ)
 	Σ = inverse(H) # reinterpret Hessian of minimization problem as inverse of covariance matrix
-	# if verbose
-	# println("in approximate_negative_log_evidence")
-	# display(eigvals(Matrix(Σ)))
-	# display(Matrix(Σ))
-	# end
+	if verbose
+		println("in approximate_negative_log_evidence")
+		display(eigvals(Matrix(Σ)))
+		display(Matrix(Σ))
+	end
 	# println("val: $(val)")
 	# println("rest: $(logdet(Σ) + d * log(2π))")
 	try
