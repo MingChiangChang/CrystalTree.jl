@@ -106,6 +106,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
             end
         end
     end
+    return result
 end
 
 # TODO: Remove this and only keep those using Setting objects

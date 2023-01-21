@@ -1,9 +1,10 @@
 module TestLazyTree
 using CrystalShift
+using CrystalShift: OptimizationSettings
 using CrystalTree
 using CrystalTree: Lazytree, get_phase_ids
 using CrystalTree: add_phase, create_child_nodes, attach_child_nodes!, expand!
-using CrystalTree: search!, search_k2n!
+using CrystalTree: search!, search_k2n!, TreeSearchSettings
 # using DelimitedFiles
 using LinearAlgebra
 
@@ -58,11 +59,12 @@ LT = Lazytree(cs,  x, 20, s, true)
 noise_intensity = 0.1
 noise = noise_intensity.*(1 .+ sin.(0.2x))
 @. y += noise
+opt_stn = OptimizationSettings{Float64}(std_noise, mean_θ, std_θ)
+ts_stn = TreeSearchSettings{Float64}(2, 3, opt_stn)
 
-
-t = search!(LT, x, y, 2, 10, std_noise, mean_θ, std_θ,
-                  maxiter=64, regularization=true)
-
+t = search!(LT, x, y, ts_stn)
+#t = search!(LT, x, y, 2, 10, std_noise, mean_θ, std_θ,
+#                  maxiter=64, regularization=true)
 LT = Lazytree(cs, x, 20, s, true)
 @time t = search_k2n!(LT, x, y, 2, 5, std_noise, mean_θ, std_θ, maxiter=128, regularization=true, tol=1e-5)
 # t = reduce(vcat, t)
