@@ -14,8 +14,9 @@ using CovarianceFunctions: EQ
 
 using LogExpFunctions: logsumexp
 
-export Node, Tree
+export Node, Tree, Lazytree
 export search!, search_k2n
+export TreeSearchSettings
 
 # objective types, used to trigger different code paths in
 # tree search and probabilistic inference
