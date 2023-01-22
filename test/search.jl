@@ -30,7 +30,7 @@ end
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
 println("$(size(cs, 1)) phase objects created!")
-tree = Tree(cs[1:15], 3, s)
+tree = Tree(cs[1:15], 3)
 x = collect(8:.035:45)
 y = zero(x)
 for node in tree.nodes[2:3]

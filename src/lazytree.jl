@@ -3,22 +3,21 @@ struct Lazytree{NS<:AbstractVector{<:Node},
                 CP<:AbstractVector{<:AbstractPhase},
                 AR<:AbstractVector,
                 L<:Real,
-                S<:AbstractVector} <: AbstractTree
+                } <: AbstractTree
     nodes::NS
     phase_combinations::AS # Keeping track of phase combinations
     phases::CP
     x::AR
     l::L
-    _str::S
 end
 
 function Lazytree(CPs::AbstractVector{<:AbstractPhase},
-                  x::AbstractVector, l::Real, _str::AbstractVector{<:AbstractString}, background::Bool=false)
+                  x::AbstractVector, l::Real, background::Bool=false)
     if background
         bg = BackgroundModel(x, EQ(), l, 0., rank_tol=1e-3)
-        return Lazytree(Node[Node(bg)], Set(), CPs, x, l, _str)
+        return Lazytree(Node[Node(bg)], Set(), CPs, x, l)
     else
-        return Lazytree(Node[Node()], Set(), CPs, x, l, _str)
+        return Lazytree(Node[Node()], Set(), CPs, x, l)
     end
 end
 
@@ -57,7 +56,7 @@ function create_child_nodes(LT::Lazytree, node::Node, starting_id::Int)
     for i in eachindex(LT.phases)
         if isnothing(node.phase_model.CPs) || is_allowed_new_phase(LT, node, LT.phases[i])
             push!(new_nodes, Node(add_phase(node.phase_model, LT.phases[i], LT.x, LT.l),
-                                 LT._str, starting_id+i-1))
+                                 starting_id+i-1))
         end
     end
     return new_nodes

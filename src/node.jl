@@ -22,28 +22,27 @@ Node(bg::BackgroundModel) = Node(PhaseModel(bg), Node[], 1, Float64[], Float64[]
 
 get_id(CP::CrystalPhase) = CP.id
 
-function Node(CP::CrystalPhase, _str::AbstractVector{<:AbstractString}, id::Int)
-	Node(_str[CP.id+1], id, CP.σ, CP.profile)
+function Node(CP::CrystalPhase, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
+	Node(CrystalPhase(CP, wid_init, profile), id, CP.σ, CP.profile)
 end
 
-function Node(CPs::AbstractVector{<:CrystalPhase}, _str::AbstractVector{<:AbstractString}, id::Int)
-	Node(_str[get_id.(CPs).+1], id, CPs[1].σ, CPs[1].profile)
+function Node(CPs::AbstractVector{<:CrystalPhase}, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
+	Node(CrystalPhase.(CPs, (wid_init,), (profile,)), id, CPs[1].σ, CPs[1].profile)
 end
 
-function Node(PM::PhaseModel, _str::AbstractVector{<:AbstractString}, id::Int)
-	Node(PhaseModel(CrystalPhase.(String.(_str[get_id.(PM.CPs).+1]),
-	                              (PM.CPs[1].σ, ), (PM.CPs[1].profile, )),
+function Node(PM::PhaseModel, id::Int)
+	Node(PhaseModel(CrystalPhase.(PM.CPs, (PM.CPs[1].σ, ), (PM.CPs[1].profile, )),
 								  PM.wildcard, PM.background),
 								  Node[], id, Float64[], Float64[], 0., false)
 end
 
 
-function Node(_str::AbstractString, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
-	Node(PhaseModel(CrystalPhase(String(_str), wid_init, profile)), Node[], id, Float64[], Float64[], 0., false)
+function Node(CP::CrystalPhase, id::Int)
+	Node(PhaseModel(CP), Node[], id, Float64[], Float64[], 0., false)
 end
 
-function Node(_str::AbstractVector{<:AbstractString}, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
-	Node(PhaseModel(CrystalPhase.(String.(_str), (wid_init,), (profile,))), Node[], id, Float64[], Float64[], 0., false)
+function Node(CPs::AbstractVector{<:CrystalPhase}, id::Int)
+	Node(PhaseModel(CPs), Node[], id, Float64[], Float64[], 0., false)
 end
 
 function Node(node::Node, phases::AbstractVector{<:CrystalPhase},

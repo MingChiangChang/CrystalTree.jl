@@ -10,17 +10,16 @@ using CrystalShift: evaluate!
 
 abstract type AbstractTree end
 
-struct Tree{T, CP<:AbstractVector{T}, DP<:Int, S<:AbstractVector{<:AbstractString}} <: AbstractTree
+struct Tree{T, CP<:AbstractVector{T}, DP<:Integer} <: AbstractTree
     nodes::CP
     depth::DP # Store for convenience
-	_str::S
 end
 
 # function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int;
 # 	         x::AbstractVector=[], include_background::Bool=false)
 # end
 
-function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int, _str::AbstractVector{<:AbstractString})
+function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int)
     # Construct tree with certain depth
     nodes = Node[]
 	root = Node()
@@ -32,7 +31,7 @@ function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int, _str::Abstract
 		phase_combs = combinations(phases, d)
 		nodes_at_level = get_nodes_at_level(nodes, d-1)
 		for phases in phase_combs
-			new_node = Node(phases, _str, id)
+			new_node = Node(phases, id)
 			id += 1
 			for old_node in nodes_at_level
 			    if is_immidiate_child(old_node, new_node)
@@ -43,7 +42,7 @@ function Tree(phases::AbstractVector{<:CrystalPhase}, depth::Int, _str::Abstract
 		    end
 		end
     end
-	Tree(nodes, depth, _str)
+	Tree(nodes, depth)
 end
 
 Base.view(tree::AbstractTree, i) = Base.view(tree.nodes, i)

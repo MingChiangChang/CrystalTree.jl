@@ -35,7 +35,7 @@ y /= max(y...)
 
 # TODO: add unit test for smaller function
 
-a = Tree(cs, 2, s)
+a = Tree(cs, 2)
 
 traversal = bft(a)
 @testset "bft test" begin

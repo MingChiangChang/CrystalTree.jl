@@ -28,10 +28,10 @@ y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
 # Creating objects for testing
 root = Node()
-node1 = Node(cs[1], s, 2)
-node2 = Node([cs[1], cs[2]], s, 3)
-node3 = Node([cs[1], cs[2]], s, 4)
-node4 = Node([cs[1], cs[2], cs[3]], s, 5)
+node1 = Node(cs[1], 2)
+node2 = Node([cs[1], cs[2]], 3)
+node3 = Node([cs[1], cs[2]], 4)
+node4 = Node([cs[1], cs[2], cs[3]], 5)
 show(node1)
 testnode = Node(node2, [CrystalPhase(cs[1], rand(get_param_nums(cs[1]))),
                         CrystalPhase(cs[2], rand(get_param_nums(cs[2])))],
