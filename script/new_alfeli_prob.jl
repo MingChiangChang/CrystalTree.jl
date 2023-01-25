@@ -187,6 +187,7 @@ function load(name, datadir = "/Users/sebastianament/Documents/SEA/XRD Analysis/
     end
     Data, Sticks = _read(dir, filename, sticksname)
 end
+
 std_noise = 5e-3
 mean_θ = [1., .5, .5]
 std_θ = [0.05, 1., .05]
@@ -198,6 +199,7 @@ objective = LeastSquares()
 K = 5
 
 test_path = "/Users/ming/Downloads/AlLiFeO_new/sticks.csv"
+test_path = "/Users/ming/Desktop/Code/CrystalShift.jl/data/AlLiFeO/sticks_2.csv"
 # test_path = "/Users/ming/Desktop/Code/CrystalShift.jl/data/AlLiFeO/sticks_2.csv"
 f = open(test_path, "r")
 
@@ -261,12 +263,11 @@ for i in tqdm(eachindex(t))
     y = d[i, :] #, 1:400]
 
     tree = Lazytree(cs, max_num_phases, x, 5, s, false)
-    result = search!(tree, x, y, 5, std_noise, mean_θ, std_θ,
+    result = search!(tree, x, y, 3, std_noise, mean_θ, std_θ,
                         #method=method, objective = objective,
                         maxiter=512, regularization=true) #, verbose = true) # should return a bunch of node
     result = vcat(result...)
-    # println(typeof(result))
-    # println(size(result))
+
     prob = Vector{Float64}(undef, length(result))
     @threads for i in eachindex(result)
         θ = get_free_params(result[i].phase_model)

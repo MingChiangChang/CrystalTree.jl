@@ -92,10 +92,10 @@ for std_noise in std_noises
     phase_totl = zeros(Int64, 10)
 
     k = 2
-    runs = 1000 
+    runs = 1000
     correct_count = 0
 
-    for i in 1:runs # tqdm(1:runs)
+    for i in tqdm(1:runs)# tqdm(1:runs)
         # test_comb = comb[rand(1:length(comb), 1)][1]
         cs = Vector{CrystalPhase}(undef, size(s))
         cs = @. CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
@@ -113,8 +113,7 @@ for std_noise in std_noises
                         maxiter=256, em_loop_num=2,
                         regularization=true)
         results = reduce(vcat, results)
-        probs = get_probabilities(results, x, y, std_noise, mean_θ, std_θ)
-        println(probs)
+        probs = get_probabilities(results, x, y, mean_θ, std_θ, renormalize=true)
 
         prob_of_phase = zeros(Float64, 5)
         for j in eachindex(results)

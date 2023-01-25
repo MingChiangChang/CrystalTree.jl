@@ -3,7 +3,7 @@ using CrystalShift: evaluate!, Lorentz, optimize!, FixedPseudoVoigt, fit_amorpho
 using CrystalTree
 using CrystalTree: search!, Lazytree
 using NPZ
-using PhaseMapping: xray
+# using PhaseMapping: xray
 using CovarianceFunctions: EQ
 using Base.Threads
 using ProgressBars
@@ -62,7 +62,7 @@ for file in tqdm(files)
                 # y ./= maximum(y)
                 # @. y = max(y, 1E-3)
 
-            LT = Lazytree(cs, 2, q, 10, s, false)
+            LT = Lazytree(cs, 2, q, 10, false)
             r = search!(LT , q, y, 5, std_noise, mean_θ, std_θ,
                 method = LM,
                 maxiter = 256,
