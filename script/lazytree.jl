@@ -64,7 +64,7 @@ println("kn search")
 @time t = search!(LT, x, y, 3, 3, std_noise, mean_θ, std_θ,
                   maxiter=128, regularization=true)
 
-LT = Lazytree(cs[1:30], x, 3)#, 20, false)
+LT = Lazytree(cs, x, 3)#, 20, false)
 @time t = search!(LT, x, y, 3, 3, std_noise, mean_θ, std_θ,
                   maxiter=128, regularization=true)
 println("k2n search")

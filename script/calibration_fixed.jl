@@ -67,7 +67,8 @@ for std_noise in std_noises
     # std_θ = [0.05, 5., .3]
 
     test_path = "/Users/ming/Desktop/Code/CrystalShift.jl/data/calibration/sticks.csv"
-    data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data_nl=1e-1.npy"
+    # data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data_nl=1e-1.npy"
+    data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data.npy"
     test_data = npzread(data_path)
     f = open(test_path, "r")
 
@@ -95,7 +96,7 @@ for std_noise in std_noises
     runs = 1000
     correct_count = 0
 
-    for i in tqdm(1:runs)# tqdm(1:runs)
+    for i in tqdm(1:runs)
         # test_comb = comb[rand(1:length(comb), 1)][1]
         cs = Vector{CrystalPhase}(undef, size(s))
         cs = @. CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
@@ -106,13 +107,15 @@ for std_noise in std_noises
         end
         test_comb = Set(test_comb)
 
-        LT = Lazytree(cs, k, x, 5, s)
+        LT = Lazytree(cs, x, 5)
 
-        results = search!(LT, x, y, k, std_noise, mean_θ, std_θ,
+        results = search!(LT, x, y, 2, k, std_noise, mean_θ, std_θ,
                         method=LM, objective="LS", optimize_mode=EM,
-                        maxiter=256, em_loop_num=2,
+                        maxiter=256, em_loop_num=5,
                         regularization=true)
         results = reduce(vcat, results)
+
+
         probs = get_probabilities(results, x, y, mean_θ, std_θ, renormalize=true)
 
         prob_of_phase = zeros(Float64, 5)
