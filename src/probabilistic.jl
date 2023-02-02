@@ -14,7 +14,7 @@ function get_probabilities(results::AbstractVector{<:Node},
 
 	neg_log_prob = zeros(length(results))
 
-	for i in 1:length(results)
+	for i in eachindex(results)
 		θ = get_free_params(results[i].phase_model)
 		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
 		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y,
@@ -22,7 +22,9 @@ function get_probabilities(results::AbstractVector{<:Node},
 	end
 
 	if renormalize
-		neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
+		# neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
+		neg_log_prob .*= std_noise
+		neg_log_prob .-= minimum(neg_log_prob)
 	end
 	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
 	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
@@ -55,6 +57,7 @@ function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::Ab
 	return approximate_negative_log_evidence(f, log_θ, verbose)
 end
 
+using Plots
 
 function get_probabilities(results::AbstractVector{<:Node},
 				x::AbstractVector{<:Real},
@@ -66,18 +69,50 @@ function get_probabilities(results::AbstractVector{<:Node},
 
 	neg_log_prob = zeros(length(results))
 
-	@threads for i in 1:length(results)
+	std_noise = minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
+	for i in 1:length(results)
 		θ = get_free_params_w_std_noise(results[i].phase_model, x, y)
+		θ[end] = std_noise
 		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
 		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y,
-				                                            full_mean_θ, full_std_θ, objective) * θ[end]^2
+				                                            full_mean_θ, full_std_θ, objective)
 	end
+
+	# for i in eachindex(results)
+	# 	plt = plot(x, y)
+	# 	plot!(x, evaluate!(zero(x), results[i].phase_model, x), title="$(neg_log_prob[i])")
+	# 	display(plt)
+	# end
     # println(minimum(neg_log_prob))
 	if renormalize
-    	neg_log_prob .-= minimum(neg_log_prob)# renormalize
+    	# renormalize
+		neg_log_prob ./= maximum(neg_log_prob) * std_noise * 0.07# * 10
+		#neg_log_prob .*= std_noise
 	end
 	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
 	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
+end
+
+function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::AbstractVector,
+	                                      y::AbstractVector,
+	                                      mean_θ::RealOrVec, std_θ::RealOrVec,
+	                                      objective::AbstractObjective, λ::Real = 1e-6,
+	                                      verbose::Bool = false)
+    mean_log_θ = log.(mean_θ)
+
+    f = if objective isa LeastSquares
+        function (log_θ)
+            ls_objective(node.phase_model, log_θ, x, y, mean_log_θ, std_θ)
+        end
+    else
+        error("unimplemented")
+    end
+
+    # tramsform to log space for better conditioning
+    θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)])
+    log_θ = θ
+
+    return approximate_negative_log_evidence(f, log_θ, verbose)
 end
 
 function get_free_params_w_std_noise(phases::AbstractVector{<:AbstractPhase}, x::AbstractVector, y::AbstractVector)
@@ -112,27 +147,7 @@ function ls_residual(pm::PhaseModel, log_θ::AbstractVector, x::AbstractVector, 
 	return sum(abs2, r)
 end
 
-function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::AbstractVector,
-											y::AbstractVector,
-											mean_θ::RealOrVec, std_θ::RealOrVec,
-											objective::AbstractObjective, λ::Real = 1e-6,
-											verbose::Bool = false)
-	mean_log_θ = log.(mean_θ)
 
-	f = if objective isa LeastSquares
-			function (log_θ)
-				ls_objective(node.phase_model, log_θ, x, y, mean_log_θ, std_θ)
-			end
-		else
-			error("unimplemented")
-		end
-
-	# tramsform to log space for better conditioning
-	θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)])
-	log_θ = θ
-
-	return approximate_negative_log_evidence(f, log_θ, verbose)
-end
 
 # NOTE assumes θ is stationary point of θ (i.e. ∇f = 0)
 # computes approximation to \int exp(-f(θ)) dθ via Laplace approximation

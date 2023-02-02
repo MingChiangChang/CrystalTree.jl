@@ -15,20 +15,22 @@ end
 
 # TODO: allow PM() to create empty phasemodel object
 Node() = Node(PhaseModel(), Node[], 1, Float64[], Float64[], 0., false) # Root
-Node(bg::BackgroundModel) = Node(PhaseModel(bg), Node[], 1, Float64[], Float64[], 0., false) 
+Node(bg::BackgroundModel) = Node(PhaseModel(bg), Node[], 1, Float64[], Float64[], 0., false)
 # Node(CP::CrystalPhase, id::Int) = Node(PhaseModel(CP), Node[], id, Float64[], Float64[], 0., false)
 # Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(PhaseModel(CPs), Node[], id, Float64[], Float64[], 0., false)
 # Node(PM::PhaseModel, id::Int) = Node(PM, Node[], id, Float64[], Float64[], 0., false)
 
 get_id(CP::CrystalPhase) = CP.id
 
-function Node(CP::CrystalPhase, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
-	Node(CrystalPhase(CP, wid_init, profile), id, CP.σ, CP.profile)
-end
+#function Node(CP::CrystalPhase, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
+# function Node(CP::CrystalPhase, id::Int, wid_init::Real, profile::PeakProfile)
+# 	Node(CrystalPhase(CP, wid_init, profile), id, CP.σ, CP.profile)
+# end
 
-function Node(CPs::AbstractVector{<:CrystalPhase}, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
-	Node(CrystalPhase.(CPs, (wid_init,), (profile,)), id, CPs[1].σ, CPs[1].profile)
-end
+# # function Node(CPs::AbstractVector{<:CrystalPhase}, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
+# function Node(CPs::AbstractVector{<:CrystalPhase}, id::Int, wid_init::Real, profile::PeakProfile)
+# 	Node(CrystalPhase.(CPs, (wid_init,), (profile,)), id, CPs[1].σ, CPs[1].profile)
+# end
 
 function Node(PM::PhaseModel, id::Int)
 	Node(PhaseModel(CrystalPhase.(PM.CPs, (PM.CPs[1].σ, ), (PM.CPs[1].profile, )),
