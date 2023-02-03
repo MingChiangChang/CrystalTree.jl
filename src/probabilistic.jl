@@ -10,7 +10,8 @@ function get_probabilities(results::AbstractVector{<:Node},
 							mean_θ::AbstractVector{<:Real},
 							std_θ::AbstractVector{<:Real};
 							objective::AbstractObjective = LeastSquares(),
-							renormalize::Bool = true)
+							renormalize::Bool = true,
+							normalization_constant::Real = 1.)
 
 	neg_log_prob = zeros(length(results))
 
@@ -22,9 +23,10 @@ function get_probabilities(results::AbstractVector{<:Node},
 	end
 
 	if renormalize
-		# neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
-		neg_log_prob .*= std_noise
-		neg_log_prob .-= minimum(neg_log_prob)
+		neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
+		# neg_log_prob .*= std_noise
+		# neg_log_prob .-= minimum(neg_log_prob)
+		neg_log_prob .*= normalization_constant
 	end
 	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
 	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
@@ -65,17 +67,19 @@ function get_probabilities(results::AbstractVector{<:Node},
 				mean_θ::AbstractVector{<:Real},
 				std_θ::AbstractVector{<:Real};
 				objective::AbstractObjective = LeastSquares(),
-				renormalize::Bool = true)
+				renormalize::Bool = true,
+				normalization_constant::Real = 1.0)
 
 	neg_log_prob = zeros(length(results))
 
 	std_noise = minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
 	for i in 1:length(results)
-		θ = get_free_params_w_std_noise(results[i].phase_model, x, y)
-		θ[end] = std_noise
+		# θ = get_free_params_w_std_noise(results[i].phase_model, x, y)
+		θ = get_free_params(results[i].phase_model)
+		#θ[end] = std_noise
 		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
 		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y,
-				                                            full_mean_θ, full_std_θ, objective)
+				                                            std_noise, full_mean_θ, full_std_θ, objective)
 	end
 
 	# for i in eachindex(results)
@@ -86,8 +90,10 @@ function get_probabilities(results::AbstractVector{<:Node},
     # println(minimum(neg_log_prob))
 	if renormalize
     	# renormalize
-		neg_log_prob ./= maximum(neg_log_prob) * std_noise * 0.07# * 10
-		#neg_log_prob .*= std_noise
+		neg_log_prob ./= maximum(neg_log_prob) * std_noise# * 0.07 #  This makes good calibration curve but pushes things to both sides
+		# neg_log_prob .*= std_noise
+		# neg_log_prob .-= minimum(neg_log_prob)
+		neg_log_prob .*= normalization_constant
 	end
 	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
 	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
