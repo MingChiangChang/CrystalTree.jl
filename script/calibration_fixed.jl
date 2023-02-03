@@ -67,8 +67,8 @@ for std_noise in std_noises
     # std_θ = [0.05, 5., .3]
 
     test_path = "/Users/ming/Desktop/Code/CrystalShift.jl/data/calibration/sticks.csv"
-    data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data_nl=1e-1.npy"
-    # data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data.npy"
+    # data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data_nl=1e-1.npy"
+    data_path = "/Users/ming/Desktop/Code/CrystalTree.jl/data/calibration_data.npy"
     test_data = npzread(data_path)
     f = open(test_path, "r")
 
@@ -110,13 +110,13 @@ for std_noise in std_noises
         LT = Lazytree(cs, x, 5)
 
         results = search!(LT, x, y, 2, k, std_noise, mean_θ, std_θ,
-                        method=LM, objective="LS", optimize_mode=Simple,
+                        method=LM, objective="LS", optimize_mode=EM,
                         maxiter=256, em_loop_num=5,
                         regularization=true)
         results = reduce(vcat, results)
 
 
-        probs = get_probabilities(results, x, y, std_noise, mean_θ, std_θ, renormalize=true, normalization_constant=1.)
+        probs = get_probabilities(results, x, y,  mean_θ, std_θ, renormalize=true, normalization_constant=2.5)
 
         prob_of_phase = zeros(Float64, 5)
         for j in eachindex(results)

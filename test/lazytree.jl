@@ -60,7 +60,7 @@ noise_intensity = 0.1
 noise = noise_intensity.*(1 .+ sin.(0.2x))
 @. y += noise
 opt_stn = OptimizationSettings{Float64}(std_noise, mean_θ, std_θ)
-ts_stn = TreeSearchSettings{Float64}(2, 3, opt_stn)
+ts_stn = TreeSearchSettings{Float64}(2, 3, 1., opt_stn)
 
 t = search!(LT, x, y, ts_stn)
 #t = search!(LT, x, y, 2, 10, std_noise, mean_θ, std_θ,
