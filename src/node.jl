@@ -14,23 +14,14 @@ mutable struct Node{PM<:PhaseModel, CN<:AbstractVector,
 end
 
 # TODO: allow PM() to create empty phasemodel object
-Node() = Node(PhaseModel(), Node[], 1, Float64[], Float64[], 0., false) # Root
-Node(bg::BackgroundModel) = Node(PhaseModel(bg), Node[], 1, Float64[], Float64[], 0., false)
+Node() = Node(PhaseModel(), Node[], 1, Float64[], Float64[], 0., false) # empty root this will not do amorphous identification
+Node(bg::BackgroundModel) = Node(PhaseModel(bg), Node[], 1, Float64[], Float64[], 0., false) # Root for doing amorphous identification
 # Node(CP::CrystalPhase, id::Int) = Node(PhaseModel(CP), Node[], id, Float64[], Float64[], 0., false)
 # Node(CPs::AbstractVector{<:CrystalPhase}, id::Int) = Node(PhaseModel(CPs), Node[], id, Float64[], Float64[], 0., false)
 # Node(PM::PhaseModel, id::Int) = Node(PM, Node[], id, Float64[], Float64[], 0., false)
 
 get_id(CP::CrystalPhase) = CP.id
 
-#function Node(CP::CrystalPhase, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
-# function Node(CP::CrystalPhase, id::Int, wid_init::Real, profile::PeakProfile)
-# 	Node(CrystalPhase(CP, wid_init, profile), id, CP.σ, CP.profile)
-# end
-
-# # function Node(CPs::AbstractVector{<:CrystalPhase}, id::Int, wid_init::Real=.1, profile::PeakProfile=PseudoVoigt(0.5))
-# function Node(CPs::AbstractVector{<:CrystalPhase}, id::Int, wid_init::Real, profile::PeakProfile)
-# 	Node(CrystalPhase.(CPs, (wid_init,), (profile,)), id, CPs[1].σ, CPs[1].profile)
-# end
 
 function Node(PM::PhaseModel, id::Int)
 	Node(PhaseModel(CrystalPhase.(PM.CPs, (PM.CPs[1].σ, ), (PM.CPs[1].profile, )),
@@ -102,12 +93,14 @@ function check_same_phase(PM::PhaseModel,
 	check_same_phase(PM.CPs, phase_comb)
 end
 
-function check_same_phase(phase_comb::AbstractVector{<:AbstractPhase}, 
+function check_same_phase(phase_comb::AbstractVector{<:AbstractPhase},
 	                      PM::PhaseModel)
     check_same_phase(PM.CPs, phase_comb)
 end
 
-function check_same_phase(phase_comb1::AbstractVector{<:AbstractPhase}, 
+check_same_phase(::Nothing, ::Nothing) = true
+
+function check_same_phase(phase_comb1::AbstractVector{<:AbstractPhase},
 	                      phase_comb2::AbstractVector{<:AbstractPhase})
     # ids_1 = Set([phase_comb1[i].id for i in eachindex(phase_comb1)])
 	# ids_2 = Set([phase_comb2[i].id for i in eachindex(phase_comb2)])
@@ -171,10 +164,11 @@ function remove_child!(parent::Node, child::Node)
 	end
 end
 
-get_level(node::Node) = size(node.phase_model)[1]
+get_level(node::Node) = isnothing(node.phase_model.CPs) ? 0 : size(node.phase_model, 1)
 get_inner(nodes::AbstractVector{<:Node}) = [node.inner for node in nodes]
 get_child_ids(node::Node) = [node.child_node[i].id for i in eachindex(node.child_node)]
 get_ids(nodes::AbstractVector{<:Node}) = [node.id for node in nodes]
+
 
 # O(n) for now, can improve to O(1)
 function get_nodes_at_level(nodes::AbstractVector{<:Node}, level::Int)
