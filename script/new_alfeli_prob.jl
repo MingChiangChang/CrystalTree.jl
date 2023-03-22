@@ -195,6 +195,7 @@ std_θ = [0.05, 1., .05]
 
 method = LM
 objective = LeastSquares()
+amorphous = false
 
 K = 5
 
@@ -262,10 +263,13 @@ for i in tqdm(eachindex(t))
     d[i, :] ./= maximum(d[i, :])
     y = d[i, :] #, 1:400]
 
-    tree = Lazytree(cs, max_num_phases, x, 5, s, false)
-    result = search!(tree, x, y, 3, std_noise, mean_θ, std_θ,
+    tree = Lazytree(cs, x)
+    result = search!(tree, x, y, 3, 3, 1., amorphous, false, 5., std_noise, mean_θ, std_θ,
                         #method=method, objective = objective,
                         maxiter=512, regularization=true) #, verbose = true) # should return a bunch of node
+    if !amorphous
+        result = result[2:end]
+    end
     result = vcat(result...)
 
     prob = Vector{Float64}(undef, length(result))

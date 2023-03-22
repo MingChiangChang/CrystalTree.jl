@@ -8,7 +8,7 @@ using CrystalTree: in_top_k, top_k_accuracy
 using CrystalShift
 using CrystalShift: get_free_params, extend_priors, Lorentz, evaluate_residual!, PseudoVoigt
 using CrystalShift: Gauss, FixedPseudoVoigt
-using PhaseMapping: load
+# using PhaseMapping: load
 using Plots
 using LinearAlgebra
 using Base.Threads

@@ -113,9 +113,11 @@ end
 
 function Base.show(io::IO, node::Node)
 	println("Node ID: $(node.id)")
-    println("Phases:")
-	for phase in node.phase_model
-		println("    $(phase.name)")
+	if !isnothing(node.phase_model.CPs)
+		println("Phases:")
+		for phase in node.phase_model
+			println("    $(phase.name)")
+		end
 	end
 	println("Number of child nodes: $(size(node.child_node))")
 	println("Inner product: $(node.inner)")

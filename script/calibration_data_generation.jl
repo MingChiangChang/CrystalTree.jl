@@ -7,8 +7,9 @@ using ProgressBars
 using Measurements
 
 using Plots
+using NPZ
 
-noise_level=0.1
+noise_level=0.01
 
 function synthesize_multiphase_data(cps::AbstractVector{<:CrystalPhase},
                                     x::AbstractVector)
@@ -29,6 +30,7 @@ function synthesize_multiphase_data(cps::AbstractVector{<:CrystalPhase},
     r./=maximum(r)
     noise = noise_level.*rand(length(x))
     r += noise
+    r./=maximum(r)
     r, full_params
 end
 
@@ -92,7 +94,8 @@ end
 
 cs = Vector{CrystalPhase}(undef, size(s))
 cs = @. CrystalPhase(String(s), (0.1, ), (Lorentz(), ))
-x = collect(8:.1:40) #collect(LinRange(8, 40, 4501)) #collect(8:.1:40)
+# x = collect(8:.1:40) #collect(LinRange(8, 40, 4501)) #collect(8:.1:40)
+x = LinRange(8, 40, 4501)
 totl = zeros(Int64, 10)
 correct = zero(totl)
 totl_prob = zeros(Float64, 10)
@@ -102,7 +105,7 @@ phase_totl = zeros(Int64, 10)
 
 comb = vcat(collect(combinations([1,2,3,4,5], 1)), collect(combinations([1,2,3,4,5], 2)))
 k = 2
-runs = 100000
+runs = 10000
 correct_count = 0
 
 calibration_data = zeros(Float64, (runs, length(x)+2))
@@ -117,4 +120,4 @@ for i in tqdm(1:runs)
     calibration_data[i, end-1:end-2+length(test_comb)] .= test_comb
 end
 
-npzwrite("data/calibration_data_nl=1e-1.npy", calibration_data)
+npzwrite("data/bcnn_calibration_data_nl=1e-2.npy", calibration_data)

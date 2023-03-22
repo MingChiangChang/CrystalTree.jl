@@ -1,4 +1,4 @@
-# module TestLazyTree
+module TestLazyTree
 using CrystalShift
 using CrystalShift: OptimizationSettings
 using CrystalTree
@@ -17,7 +17,7 @@ mean_θ = [1., 1., .2]
 std_θ = [.5, .5, 1.]
 
 # CrystalPhas object creation
-path = "data/"
+path = "../data/"
 phase_path = path * "sticks.csv"
 f = open(phase_path, "r")
 
@@ -69,7 +69,15 @@ t = search!(LT, x, y, ts_stn)
 #                  maxiter=64, regularization=true)
 LT = Lazytree(cs, x)
 ts_stn = TreeSearchSettings{Float64}(2, 3, 1., false, false, 5., opt_stn)
-@time t = search_k2n!(LT, x, y, ts_stn)
+@time t = search_k2n!(LT, x, y, ts_stn) # 2.3 secs without background modeling
+res = [norm(t[i](x).-y) for i in eachindex(t)]
+ind = argmin(res)
+@test Set(get_phase_ids(t[ind])) == Set([0, 1])
+
+@. y += noise
+LT = Lazytree(cs, x)
+ts_stn = TreeSearchSettings{Float64}(2, 3, 1., false, true, 5., opt_stn)
+@time t = search_k2n!(LT, x, y, ts_stn) # 28 secs with background modeling
 # t = reduce(vcat, t)
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
@@ -79,4 +87,4 @@ ind = argmin(res)
 # display(plt)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
 println("End of lazytree.jl test")
-# end
+end
