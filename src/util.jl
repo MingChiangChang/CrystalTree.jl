@@ -40,7 +40,7 @@ function precision(; answer, ground_truth, verbose::Bool=false)
         println("fp: $(fp)")
         println("precision: $(precision)")
     end
-    
+
     return precision
 end
 
@@ -120,4 +120,9 @@ function in_top_k(result::AbstractArray, sol::AbstractArray, k::Int64)
         end
     end
     return false
+end
+
+function ECE(bin_size::AbstractVector, acc::AbstractVector, pred::AbstractVector)
+    totl_sample = sum(bin_size)
+    sum(abs.(acc .- pred) .* bin_size ./ totl_sample)
 end

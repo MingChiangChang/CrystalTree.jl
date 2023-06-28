@@ -90,7 +90,7 @@ function get_probabilities(results::AbstractVector{<:Node},
     # println(minimum(neg_log_prob))
 	if renormalize
     	# renormalize
-		neg_log_prob ./= maximum(neg_log_prob) * std_noise# * 0.07 #  This makes good calibration curve but pushes things to both sides
+		neg_log_prob ./= maximum(neg_log_prob) #* std_noise# * 0.07 #  This makes good calibration curve but pushes things to both sides
 		# neg_log_prob .*= std_noise
 		# neg_log_prob .-= minimum(neg_log_prob)
 		neg_log_prob .*= normalization_constant

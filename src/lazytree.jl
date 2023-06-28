@@ -92,7 +92,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
         nodes = get_nodes_at_level(LT, level-1)
         level_result = Vector{Node}(undef, length(nodes))
 
-        @threads for i in eachindex(nodes)
+       @threads for i in eachindex(nodes)
             if !isnothing(nodes[i].phase_model.background) || !isempty(nodes[i].phase_model.CPs)
                 pm = optimize!(nodes[i].phase_model, x, y, ts_stn.opt_stn)
                 if pm isa Tuple
@@ -120,8 +120,8 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                  method::OptimizationMethods = LM, objective::String = "LS",
                  optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
-                 maxiter::Integer = 32, regularization::Bool = true, verbose::Bool = false, tol::Real = DEFAULT_TOL)
-    opt_stn = OptimizationSettings{eltype(mean)}(std_noise, mean, std, maxiter, regularization, method, objective, optimize_mode, em_loop_num, verbose, tol)
+                 maxiter::Integer = 32, regularization::Bool = true, λ::Float64=1., verbose::Bool = false, tol::Real = DEFAULT_TOL)
+    opt_stn = OptimizationSettings{eltype(mean)}(std_noise, mean, std, maxiter, regularization, method, objective, optimize_mode, em_loop_num, λ, verbose, tol)
     ts_stn = TreeSearchSettings(depth, k, normalization_constant, amorphous, background, background_length, opt_stn)
     search!(LT, x, y, ts_stn)
 end
