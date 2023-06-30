@@ -74,6 +74,10 @@ res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
 
+LT = Lazytree(cs, x)
+ts_stn = TreeSearchSettings{Float64}(3, [3, 2, 1], 1., false, false, 5., opt_stn)
+@time t = search!(LT, x, y, ts_stn) # 2.3 secs without background modeling
+
 @. y += noise
 LT = Lazytree(cs, x)
 ts_stn = TreeSearchSettings{Float64}(2, 3, 1., false, true, 5., opt_stn)

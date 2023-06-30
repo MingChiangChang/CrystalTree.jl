@@ -95,7 +95,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
        @threads for i in eachindex(nodes)
             if !isnothing(nodes[i].phase_model.background) || !isempty(nodes[i].phase_model.CPs)
                 pm = optimize!(nodes[i].phase_model, x, y, ts_stn.opt_stn)
-                if pm isa Tuple
+                if pm isa Tuple # The uncertainty flag returns two result, awful solution for now
                     pm = pm[1]
                 end
                 nodes[i] = Node(nodes[i], pm, x, y, true)
@@ -104,7 +104,13 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
         end
 
         result[level] = level_result
-        top_k = get_top_ids(result[level], k)
+
+        if level == 1
+            top_k = result[1]
+        else
+            top_k = get_top_k_ids(result, k, level)
+        end
+
         if level != depth+1
             for i in top_k
                 expand!(LT, i, x, ts_stn.background, ts_stn.background_length)
@@ -114,9 +120,12 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
     return result
 end
 
+get_top_k_ids(result::AbstractVector, k::Int, level::Int) = get_top_ids(result[level], k)
+get_top_k_ids(result::AbstractVector, k::AbstractVector, level::Int) = get_top_ids(result[level], k[level-1])
+
 # TODO: Remove this and only keep those using Setting objects
 function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
-                 depth::Integer, k::Integer, normalization_constant::Real, amorphous::Bool, background::Bool, background_length::Real,
+                 depth::Integer, k::ScalarOrVecInt, normalization_constant::Real, amorphous::Bool, background::Bool, background_length::Real,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                  method::OptimizationMethods = LM, objective::String = "LS",
                  optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
@@ -165,6 +174,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
 
     append!(result, child_nodes)
 
+    ts_stn.k isa AbstractVector && error("Vector k is not supported for search_k2n!")
     top_k = get_top_ids(child_nodes, ts_stn.k)
     for j in eachindex(top_k)
         search_k2n!(result, LT, top_k[j], x, y, ts_stn)
@@ -173,7 +183,7 @@ end
 
 
 ################## Helper functions #################
-function get_top_ids(nodes::AbstractVector{Node}, k=Int)
+function get_top_ids(nodes::AbstractVector{Node}, k::Int)
     residuals = [norm(nodes[i].residual) for i in eachindex(nodes)]
     if k > length(nodes)
         return @view nodes[sortperm(residuals)]

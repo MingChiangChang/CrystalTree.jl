@@ -1,6 +1,8 @@
+const ScalarOrVecInt = Union{Integer, AbstractVector{<:Integer}}
+
 struct TreeSearchSettings{V}
     depth::Integer
-    k::Integer
+    k::ScalarOrVecInt
     normalization_constant::Real
     amorphous::Bool # Amorphous
     background::Bool
