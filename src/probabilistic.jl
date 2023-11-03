@@ -59,8 +59,6 @@ function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::Ab
 	return approximate_negative_log_evidence(f, log_θ, verbose)
 end
 
-using Plots
-
 function get_probabilities(results::AbstractVector{<:Node},
 				x::AbstractVector{<:Real},
 				y::AbstractVector{<:Real},
