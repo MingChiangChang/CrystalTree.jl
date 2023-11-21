@@ -17,7 +17,7 @@ function get_probabilities(results::AbstractVector{<:Node},
 
 	neg_log_prob = zeros(length(results))
 
-	for i in eachindex(results)
+	@threads for i in eachindex(results)
 		θ = get_free_params(results[i].phase_model)
 		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
 		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, y_uncer,
