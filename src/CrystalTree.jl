@@ -3,7 +3,7 @@ using ForwardDiff
 using CrystalShift
 using CrystalShift: CrystalPhase, optimize!, _residual!, _prior, kl, PeakProfile
 using CrystalShift: PhaseModel, get_param_nums, full_optimize!, PseudoVoigt, AbstractPhase
-using CrystalShift: get_free_params, extend_priors, OptimizationMode, OptimizationSettings
+using CrystalShift: get_free_params, extend_priors, OptimizationMode, OptimizationSettings, _weighted_residual!
 
 import CrystalShift: get_phase_ids
 
