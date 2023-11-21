@@ -74,7 +74,7 @@ end
 
 
 # O(kn) method
-function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
+function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector,
                  ts_stn::TreeSearchSettings)
     depth, k = ts_stn.depth, ts_stn.k
     result = Vector{Vector{<:Node}}(undef, depth+1)
@@ -94,7 +94,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
 
        @threads for i in eachindex(nodes)
             if !isnothing(nodes[i].phase_model.background) || !isempty(nodes[i].phase_model.CPs)
-                pm = optimize!(nodes[i].phase_model, x, y, ts_stn.opt_stn)
+                pm = optimize!(nodes[i].phase_model, x, y, y_uncer, ts_stn.opt_stn)
                 if pm isa Tuple # The uncertainty flag returns two result, awful solution for now
                     pm = pm[1]
                 end
@@ -120,11 +120,16 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
     return result
 end
 
+function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, ts_stn::TreeSearchSettings)
+    y_uncer = zero(y)
+    search!(LT, x, y, y_uncer, ts_stn)
+end
+
 get_top_k_ids(result::AbstractVector, k::Int, level::Int) = get_top_ids(result[level], k)
 get_top_k_ids(result::AbstractVector, k::AbstractVector, level::Int) = get_top_ids(result[level], k[level-1])
 
 # TODO: Remove this and only keep those using Setting objects
-function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
+function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector,
                  depth::Integer, k::ScalarOrVecInt, normalization_constant::Real, amorphous::Bool, background::Bool, background_length::Real,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                  method::OptimizationMethods = LM, objective::String = "LS",
@@ -132,12 +137,25 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
                  maxiter::Integer = 32, regularization::Bool = true, λ::Float64=1., verbose::Bool = false, tol::Real = DEFAULT_TOL)
     opt_stn = OptimizationSettings{eltype(mean)}(std_noise, mean, std, maxiter, regularization, method, objective, optimize_mode, em_loop_num, λ, verbose, tol)
     ts_stn = TreeSearchSettings(depth, k, normalization_constant, amorphous, background, background_length, opt_stn)
-    search!(LT, x, y, ts_stn)
+    search!(LT, x, y, y_uncer, ts_stn)
+end
+
+function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, 
+    depth::Integer, k::ScalarOrVecInt, normalization_constant::Real, amorphous::Bool, background::Bool, background_length::Real,
+    std_noise::Real, mean::AbstractVector, std::AbstractVector;
+    method::OptimizationMethods = LM, objective::String = "LS",
+    optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
+    maxiter::Integer = 32, regularization::Bool = true, λ::Float64=1., verbose::Bool = false, tol::Real = DEFAULT_TOL)
+
+    y_uncer = zero(y)
+    opt_stn = OptimizationSettings{eltype(mean)}(std_noise, mean, std, maxiter, regularization, method, objective, optimize_mode, em_loop_num, λ, verbose, tol)
+    ts_stn = TreeSearchSettings(depth, k, normalization_constant, amorphous, background, background_length, opt_stn)
+    search!(LT, x, y, y_uncer, ts_stn)
 end
 
 # O(k^2 n) method
 # expand the node and recussively call search_k2n on the top-k nodes
-function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, ts_stn::TreeSearchSettings)
+function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector, ts_stn::TreeSearchSettings)
 
     if ts_stn.amorphous
         bg = BackgroundModel(x, EQ(), 8., 10., rank_tol=1e-3)
@@ -147,19 +165,24 @@ function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, ts_stn:
     end
 
     result = Vector{Node}()
-    search_k2n!(result, LT, LT.nodes[1], x, y, ts_stn)
+    search_k2n!(result, LT, LT.nodes[1], x, y, y_uncer, ts_stn)
     @threads for i in eachindex(result)
         if !result[i].is_optimized
-            optimize!(result[i].phase_model, x, y, ts_stn.opt_stn)
+            optimize!(result[i].phase_model, x, y, y_uncer, ts_stn.opt_stn)
             result[i] = Node(result[i], pm, x, y, true)
         end
     end
     result
 end
 
+function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, ts_stn::TreeSearchSettings)
+    y_uncer = zero(y)
+    search_k2n!(LT, x, y, y_uncer, ts_stn)
+end
+
 # Doing a mixed version of depth-first search and breadth-first search
 # doing best-first strategy at each level than dig futher down
-function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::AbstractVector, y::AbstractVector, ts_stn::TreeSearchSettings)
+function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector, ts_stn::TreeSearchSettings)
 
     if size(node)[1] == ts_stn.depth
         push!(result, node)
@@ -168,7 +191,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
 
     child_nodes = expand!(LT, node, x, ts_stn.background, ts_stn.background_length)
     @threads for i in eachindex(child_nodes)
-        pm = optimize!(child_nodes[i].phase_model, x, y, ts_stn.opt_stn)
+        pm = optimize!(child_nodes[i].phase_model, x, y, y_uncer, ts_stn.opt_stn)
         child_nodes[i] = Node(child_nodes[i], pm, x, y, true)
     end
 
@@ -177,7 +200,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
     ts_stn.k isa AbstractVector && error("Vector k is not supported for search_k2n!")
     top_k = get_top_ids(child_nodes, ts_stn.k)
     for j in eachindex(top_k)
-        search_k2n!(result, LT, top_k[j], x, y, ts_stn)
+        search_k2n!(result, LT, top_k[j], x, y, y_uncer, ts_stn)
     end
 end
 
