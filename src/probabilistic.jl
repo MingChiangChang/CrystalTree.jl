@@ -7,7 +7,7 @@
 function get_probabilities(results::AbstractVector{<:Node},
 							x::AbstractVector{<:Real},
 							y::AbstractVector{<:Real},
-							std_noise::RealOrVec,
+							std_noise::Real,
 							mean_θ::AbstractVector{<:Real},
 							std_θ::AbstractVector{<:Real};
 							objective::AbstractObjective = LeastSquares(),
@@ -38,7 +38,7 @@ function get_probabilities(results::AbstractVector{<:Node},
 							x::AbstractVector{<:Real},
 							y::AbstractVector{<:Real},
 							y_uncer::AbstractVector,
-							std_noise::RealOrVec,
+							std_noise::Real,
 							mean_θ::AbstractVector{<:Real},
 							std_θ::AbstractVector{<:Real};
 							objective::AbstractObjective = LeastSquares(),
@@ -56,8 +56,6 @@ function get_probabilities(results::AbstractVector{<:Node},
 
 	if renormalize
 		neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
-		# neg_log_prob .*= std_noise
-		# neg_log_prob .-= minimum(neg_log_prob)
 		neg_log_prob .*= normalization_constant
 	end
 
@@ -99,7 +97,7 @@ end
 
 # λ controls the weight of the least-squares regularization term for kl objective
 function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::AbstractVector,
-								 y::AbstractVector, std_noise::RealOrVec,
+								 y::AbstractVector, std_noise::Real,
 								 mean_θ::RealOrVec, std_θ::RealOrVec,
 								 objective::AbstractObjective, λ::Real = 1e-6,
 								 verbose::Bool = false)
@@ -128,7 +126,7 @@ function approximate_negative_log_evidence(node::Node,
 										x::AbstractVector,
 										y::AbstractVector,
 										y_uncer::AbstractVector,
-										std_noise::RealOrVec,
+										std_noise::Real,
 										mean_θ::RealOrVec,
 										std_θ::RealOrVec,
 										objective::AbstractObjective,
