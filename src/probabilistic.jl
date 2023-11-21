@@ -3,6 +3,7 @@
 # mean_θ, std_θ are the mean and standard deviation of the prior Gaussian distribution of θ
 # std_noise is the standard deviation of the noise, can be real number or vector
 # if std_noise is a vector, each element corresponds the std of an element in y
+# TODO: Clean up repeated code and use dispatch instead
 function get_probabilities(results::AbstractVector{<:Node},
 							x::AbstractVector{<:Real},
 							y::AbstractVector{<:Real},
@@ -33,6 +34,69 @@ function get_probabilities(results::AbstractVector{<:Node},
 end
 
 
+function get_probabilities(results::AbstractVector{<:Node},
+							x::AbstractVector{<:Real},
+							y::AbstractVector{<:Real},
+							y_uncer::AbstractVector,
+							std_noise::RealOrVec,
+							mean_θ::AbstractVector{<:Real},
+							std_θ::AbstractVector{<:Real};
+							objective::AbstractObjective = LeastSquares(),
+							renormalize::Bool = true,
+							normalization_constant::Real = 1.)
+
+	neg_log_prob = zeros(length(results))
+
+	for i in eachindex(results)
+		θ = get_free_params(results[i].phase_model)
+		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
+		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, y_uncer,
+				                                            std_noise, full_mean_θ, full_std_θ, objective)
+	end
+
+	if renormalize
+		neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
+		# neg_log_prob .*= std_noise
+		# neg_log_prob .-= minimum(neg_log_prob)
+		neg_log_prob .*= normalization_constant
+	end
+
+	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
+
+	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
+end
+
+function get_probabilities(results::AbstractVector{<:Node},
+							x::AbstractVector{<:Real},
+							y::AbstractVector{<:Real},
+							y_uncer::AbstractVector,
+							mean_θ::AbstractVector{<:Real},
+							std_θ::AbstractVector{<:Real};
+							objective::AbstractObjective = LeastSquares(),
+							renormalize::Bool = true,
+							normalization_constant::Real = 1.)
+
+	neg_log_prob = zeros(length(results))
+
+	std_noise = minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
+	for i in 1:length(results)
+		θ = get_free_params(results[i].phase_model)
+		full_mean_θ, full_std_θ = extend_priors(mean_θ, std_θ, results[i].phase_model.CPs)
+		neg_log_prob[i] = approximate_negative_log_evidence(results[i], θ, x, y, y_uncer,
+				                                            std_noise, full_mean_θ, full_std_θ, objective)
+	end
+
+	if renormalize
+		neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
+		neg_log_prob .*= normalization_constant
+	end
+
+	log_normalization = logsumexp(-neg_log_prob)  # numerically stable computation
+
+	return @. exp(-(neg_log_prob + log_normalization)) # i.e. prob / sum(prob)
+end
+
+
 # λ controls the weight of the least-squares regularization term for kl objective
 function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::AbstractVector,
 								 y::AbstractVector, std_noise::RealOrVec,
@@ -50,6 +114,38 @@ function approximate_negative_log_evidence(node::Node, θ::AbstractVector, x::Ab
 				kl_objective(node.phase_model, log_θ, x, y, mean_log_θ, std_θ, λ)
 			end
 		end
+
+	# tramsform to log space for better conditioning
+	θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)])
+	log_θ = θ
+	# IDEA: chek norm of gradient. If it exceeds a threshold, apply fine-tuning.
+	# newton!(f, log_θ)
+	return approximate_negative_log_evidence(f, log_θ, verbose)
+end
+
+function approximate_negative_log_evidence(node::Node,
+										θ::AbstractVector,
+										x::AbstractVector,
+										y::AbstractVector,
+										y_uncer::AbstractVector,
+										std_noise::RealOrVec,
+										mean_θ::RealOrVec,
+										std_θ::RealOrVec,
+										objective::AbstractObjective,
+										λ::Real = 1e-6,
+										verbose::Bool = false)
+
+	mean_log_θ = log.(mean_θ)
+
+	f = if objective isa LeastSquares
+			function (log_θ)
+				ls_objective(node.phase_model, log_θ, x, y, y_uncer, std_noise, mean_log_θ, std_θ)
+			end
+		elseif objective isa KullbackLeilber
+			function (log_θ)
+				kl_objective(node.phase_model, log_θ, x, y, mean_log_θ, std_θ, λ)
+			end
+	end
 
 	# tramsform to log space for better conditioning
 	θ[1:get_param_nums(node.phase_model.CPs)]= log.(θ[1:get_param_nums(node.phase_model.CPs)])
@@ -145,6 +241,28 @@ function ls_residual(pm::PhaseModel, log_θ::AbstractVector, x::AbstractVector, 
 	@. r = y
 	evaluate_residual!(pm, log_θ, x, r) # Avoid allocation, put everything in here??
 	r ./= sqrt(2) * log_θ[end] # trade-off between prior and
+
+	# actual residual
+	log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)] .=  @views log.(log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)])
+	return sum(abs2, r)
+end
+
+function ls_objective(pm::PhaseModel, log_θ::AbstractVector, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector,
+					mean_log_θ::AbstractVector, std_θ::AbstractVector)
+	ls_residual(pm, log_θ, x, y, y_uncer) + ls_regularizer(pm, log_θ[1:end-1], mean_log_θ, std_θ)
+end
+
+function ls_residual(pm::PhaseModel, log_θ::AbstractVector, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector)
+	r = zeros(promote_type(eltype(log_θ), eltype(x), eltype(y)), length(x))
+	# r = _residual!(PM, log_θ, x, y, r, std_noise)
+	log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)] .= @views exp.(log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)])
+	if (any(isinf, log_θ) || any(isnan, log_θ))
+		log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)] .=  @views log.(log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)])
+		return Inf
+	end
+	@. r = y
+	evaluate_residual!(pm, log_θ, x, r) # Avoid allocation, put everything in here??
+	@. r /= sqrt(2) * sqrt(y_uncer^2 + log_θ[end]^2) # trade-off between prior and
 
 	# actual residual
 	log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)] .=  @views log.(log_θ[1:get_param_nums(pm.CPs)+get_param_nums(pm.wildcard)])
