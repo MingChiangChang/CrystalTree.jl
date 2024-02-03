@@ -22,6 +22,7 @@ export TreeSearchSettings
 # objective types, used to trigger different code paths in
 # tree search and probabilistic inference
 abstract type AbstractObjective end
+abstract type AbstractTreeSearchSettings end
 
 struct LeastSquares <: AbstractObjective end
 string(::LeastSquares) = "LS"

@@ -1,6 +1,6 @@
 const ScalarOrVecInt = Union{Integer, AbstractVector{<:Integer}}
 
-struct TreeSearchSettings{V}
+struct TreeSearchSettings{V} <: AbstractTreeSearchSettings
     depth::Integer
     k::ScalarOrVecInt
     normalization_constant::Real
@@ -15,7 +15,7 @@ function TreeSearchSettings{Float64}()
     TreeSearchSettings(2, 3, 1., false, false, 5., opt_stn)
 end
 
-struct MPTreeSearchSettings{V}
+struct MPTreeSearchSettings{V} <: AbstractTreeSearchSettings
     depth::Integer
     k::ScalarOrVecInt
     mp_top_k::ScalarOrVecInt
