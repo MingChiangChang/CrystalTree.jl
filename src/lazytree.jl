@@ -58,7 +58,7 @@ function create_child_nodes(LT::Lazytree, node::Node, x::AbstractVector, backgro
 end
 
 
-function is_allowed_new_phase(LT::Lazytree, node::Node, phase::AbstractPhase)
+function is_allowed_new_phase(LT::AbstractTree, node::Node, phase::AbstractPhase)
     current_phases = get_phase_ids(node)
     new_phase = phase.id
     return phase.id ∉ get_phase_ids(node) && Set(vcat(current_phases, new_phase)) ∉ LT.phase_combinations
@@ -108,7 +108,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::Ab
         if level == 1
             top_k = result[1]
         else
-            top_k = get_top_k_ids(result, k, level)
+            top_k = get_top_k_nodes(result, k, level)
         end
 
         if level != depth+1
@@ -125,8 +125,8 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, ts_stn::Tre
     search!(LT, x, y, y_uncer, ts_stn)
 end
 
-get_top_k_ids(result::AbstractVector, k::Int, level::Int) = get_top_ids(result[level], k)
-get_top_k_ids(result::AbstractVector, k::AbstractVector, level::Int) = get_top_ids(result[level], k[level-1])
+get_top_k_nodes(result::AbstractVector, k::Int, level::Int) = get_top_nodes(result[level], k)
+get_top_k_nodes(result::AbstractVector, k::AbstractVector, level::Int) = get_top_nodes(result[level], k[level-1])
 
 # TODO: Remove this and only keep those using Setting objects
 function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector,
@@ -198,7 +198,7 @@ function search_k2n!(result::AbstractVector, LT::Lazytree, node::Node, x::Abstra
     append!(result, child_nodes)
 
     ts_stn.k isa AbstractVector && error("Vector k is not supported for search_k2n!")
-    top_k = get_top_ids(child_nodes, ts_stn.k)
+    top_k = get_top_nodes(child_nodes, ts_stn.k)
     for j in eachindex(top_k)
         search_k2n!(result, LT, top_k[j], x, y, y_uncer, ts_stn)
     end
@@ -206,7 +206,7 @@ end
 
 
 ################## Helper functions #################
-function get_top_ids(nodes::AbstractVector{Node}, k::Int)
+function get_top_nodes(nodes::AbstractVector{Node}, k::Int)
     residuals = [norm(nodes[i].residual) for i in eachindex(nodes)]
     if k > length(nodes)
         return @view nodes[sortperm(residuals)]
@@ -214,7 +214,7 @@ function get_top_ids(nodes::AbstractVector{Node}, k::Int)
     return @view nodes[sortperm(residuals)[1:k]]
 end
 
-function get_max_id(LT::Lazytree)
+function get_max_id(LT::AbstractTree)
     ids = [LT.nodes[i].id for i in eachindex(LT.nodes)]
     maximum(ids)
 end

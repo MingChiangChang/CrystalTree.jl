@@ -11,6 +11,7 @@ using StatsBase
 using LazyInverses
 using OptimizationAlgorithms
 using CovarianceFunctions: EQ
+using Einsum
 
 using LogExpFunctions: logsumexp
 
@@ -33,6 +34,7 @@ include("node.jl")
 include("tree.jl")
 include("treesearchsettings.jl")
 include("lazytree.jl")
+include("mptree.jl")
 include("search.jl")
 include("probabilistic.jl")
 

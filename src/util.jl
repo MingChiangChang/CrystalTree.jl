@@ -11,6 +11,17 @@ function cos_angle(x1::AbstractArray, x2::AbstractArray)
     x1'x2/(norm(x1)*norm(x2))
 end
 
+function _simulate_pattern(cs::CrystalPhase, q::AbstractVector, max_strain, w_min=0.1, w_max=0.3)
+    params = get_free_params(cs)
+    params[1:cs.param_num-2] .*= (max_strain .* (rand(cs.param_num-2).-1) .+ 1)
+    params[end:end] .= w_min .+ rand(1) .* (w_max - w_min)
+    p = zero(q)
+    evaluate!(p, cs, params, q)
+    p ./= maximum(p)
+
+    p
+end
+
 # function matrix_function(f, A::AbstractMatrix)
 # 	L, E = eigen(A)
 # 	@. L = f(L)
