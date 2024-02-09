@@ -25,7 +25,7 @@ function get_probabilities(results::AbstractVector{<:Node},
 	end
 
 	if renormalize
-		neg_log_prob ./= minimum(neg_log_prob)# * std_noise # Renormalize
+		neg_log_prob ./= minimum(neg_log_prob) * std_noise # Renormalize
 		neg_log_prob .*= normalization_constant
 	end
 
@@ -155,8 +155,9 @@ function get_probabilities(results::AbstractVector{<:Node},
 				normalization_constant::Real = 1.0)
 
 	neg_log_prob = zeros(length(results))
-
 	std_noise = minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
+	# println(std_noise)
+
 	for i in 1:length(results)
 		# θ = get_free_params_w_std_noise(results[i].phase_model, x, y)
 		θ = get_free_params(results[i].phase_model)
