@@ -60,27 +60,27 @@ noise_intensity = 0.1
 noise = noise_intensity.*(1 .+ sin.(0.2x))
 # @. y += noise
 opt_stn = OptimizationSettings{Float64}(std_noise, mean_θ, std_θ, 256)
-ts_stn = TreeSearchSettings{Float64}(2, 3, 1., false, false, 5., opt_stn)
+ts_stn = TreeSearchSettings{Float64}(2, 3, false, false, 5., opt_stn)
 
 t = search!(LT, x, y, ts_stn)
-ts_stn = TreeSearchSettings{Float64}(2, 3, 1., true, false, 5., opt_stn)
+ts_stn = TreeSearchSettings{Float64}(2, 3, true, false, 5., opt_stn)
 t = search!(LT, x, y, ts_stn)
 #t = search!(LT, x, y, 2, 10, std_noise, mean_θ, std_θ,
 #                  maxiter=64, regularization=true)
 LT = Lazytree(cs, x)
-ts_stn = TreeSearchSettings{Float64}(2, 3, 1., false, false, 5., opt_stn)
+ts_stn = TreeSearchSettings{Float64}(2, 3,  false, false, 5., opt_stn)
 @time t = search_k2n!(LT, x, y, ts_stn) # 2.3 secs without background modeling
 res = [norm(t[i](x).-y) for i in eachindex(t)]
 ind = argmin(res)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
 
 LT = Lazytree(cs, x)
-ts_stn = TreeSearchSettings{Float64}(3, [3, 2, 1], 1., false, false, 5., opt_stn)
+ts_stn = TreeSearchSettings{Float64}(3, [3, 2, 1],  false, false, 5., opt_stn)
 @time t = search!(LT, x, y, ts_stn) # 2.3 secs without background modeling
 
 @. y += noise
 LT = Lazytree(cs, x)
-ts_stn = TreeSearchSettings{Float64}(2, 3, 1., false, true, 5., opt_stn)
+ts_stn = TreeSearchSettings{Float64}(2, 3, false, true, 5., opt_stn)
 @time t = search_k2n!(LT, x, y, ts_stn) # 28 secs with background modeling
 # t = reduce(vcat, t)
 res = [norm(t[i](x).-y) for i in eachindex(t)]

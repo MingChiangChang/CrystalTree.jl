@@ -130,18 +130,18 @@ get_top_k_nodes(result::AbstractVector, k::AbstractVector, level::Int) = get_top
 
 # TODO: Remove this and only keep those using Setting objects
 function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::AbstractVector,
-                 depth::Integer, k::ScalarOrVecInt, normalization_constant::Real, amorphous::Bool, background::Bool, background_length::Real,
+                 depth::Integer, k::ScalarOrVecInt, amorphous::Bool, background::Bool, background_length::Real,
                  std_noise::Real, mean::AbstractVector, std::AbstractVector;
                  method::OptimizationMethods = LM, objective::String = "LS",
                  optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
                  maxiter::Integer = 32, regularization::Bool = true, λ::Float64=1., verbose::Bool = false, tol::Real = DEFAULT_TOL)
     opt_stn = OptimizationSettings{eltype(mean)}(std_noise, mean, std, maxiter, regularization, method, objective, optimize_mode, em_loop_num, λ, verbose, tol)
-    ts_stn = TreeSearchSettings(depth, k, normalization_constant, amorphous, background, background_length, opt_stn)
+    ts_stn = TreeSearchSettings(depth, k, amorphous, background, background_length, opt_stn)
     search!(LT, x, y, y_uncer, ts_stn)
 end
 
 function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, 
-    depth::Integer, k::ScalarOrVecInt, normalization_constant::Real, amorphous::Bool, background::Bool, background_length::Real,
+    depth::Integer, k::ScalarOrVecInt, amorphous::Bool, background::Bool, background_length::Real,
     std_noise::Real, mean::AbstractVector, std::AbstractVector;
     method::OptimizationMethods = LM, objective::String = "LS",
     optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
@@ -149,7 +149,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector,
 
     y_uncer = zero(y)
     opt_stn = OptimizationSettings{eltype(mean)}(std_noise, mean, std, maxiter, regularization, method, objective, optimize_mode, em_loop_num, λ, verbose, tol)
-    ts_stn = TreeSearchSettings(depth, k, normalization_constant, amorphous, background, background_length, opt_stn)
+    ts_stn = TreeSearchSettings(depth, k, amorphous, background, background_length, opt_stn)
     search!(LT, x, y, y_uncer, ts_stn)
 end
 

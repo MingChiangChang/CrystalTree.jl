@@ -61,20 +61,20 @@ noise_intensity = 0.1
 noise = noise_intensity.*(1 .+ sin.(0.2x))
 # @. y += noise
 opt_stn = OptimizationSettings{Float64}(std_noise, mean_θ, std_θ, 1024)
-mpt_stn = MPTreeSearchSettings{Float64}(3, 3, 2, 1., false, false, 5., opt_stn)
+mpt_stn = MPTreeSearchSettings{Float64}(3, 3, 2, false, false, 5., opt_stn)
 
 t = search!(mpt, x, y, zero(y), mpt_stn)
 mpt = MPTree(cs, x)
-mpt_stn = MPTreeSearchSettings{Float64}(3, 3, 2, 1., true, false, 5., opt_stn)
+mpt_stn = MPTreeSearchSettings{Float64}(3, 3, 2, true, false, 5., opt_stn)
 t = search!(mpt, x, y, zero(y), mpt_stn)
 #t = search!(LT, x, y, 2, 10, std_noise, mean_θ, std_θ,
 #                  maxiter=64, regularization=true)
 mpt = MPTree(cs, x)
-ts_stn = MPTreeSearchSettings{Float64}(3, 3, 2, 1., false, false, 5., opt_stn)
+ts_stn = MPTreeSearchSettings{Float64}(3, 3, 2, false, false, 5., opt_stn)
 #@time t = search_k2n!(LT, x, y, ts_stn) # 2.3 secs without background modeling
 
 mpt = MPTree(cs, x)
-mpt_stn = MPTreeSearchSettings{Float64}(3, 3, 2, 1., false, false, 5., opt_stn)
+mpt_stn = MPTreeSearchSettings{Float64}(3, 3, 2, false, false, 5., opt_stn)
 @time t = search!(mpt, x, y, zero(y), mpt_stn) # 2.3 secs without background modeling
 t = collect(Iterators.flatten(t))
 res = [norm(t[i](x).-y) for i in eachindex(t)]
@@ -85,7 +85,7 @@ ind = argmin(res)
 @. y += noise
 
 mpt = MPTree(cs, x)
-mpt_stn = MPTreeSearchSettings{Float64}(2, 3, 3, 1., false, true, 5., opt_stn)
+mpt_stn = MPTreeSearchSettings{Float64}(2, 3, 3, false, true, 5., opt_stn)
 @time t = search!(mpt, x, y, zero(y), mpt_stn) # 28 secs with background modeling
 t = collect(Iterators.flatten(t))
 res = [norm(t[i](x).-y) for i in eachindex(t)]
