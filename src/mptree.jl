@@ -136,19 +136,19 @@ function get_top_max_inner!(mp_res, simulated_patterns, residual)
 end
 
 
-function expand!(LT::Lazytree, node::Node, x::AbstractVector, background::Bool, l::Real)
-    starting_id = get_max_id(LT) + 1
-    expand!(LT, node, x, background, l, starting_id)
-end
-
-
-function expand!(LT::Lazytree, node::Node, x::AbstractVector, background::Bool, l::Real, starting_id::Int)
-    child_nodes = create_child_nodes(LT, node, x, background, l, starting_id)
-    attach_child_nodes!(node, child_nodes)
-    push!(LT.nodes, child_nodes...)
-    # println(Set.(get_phase_ids.(child_nodes))...) # TODO: This fails when k is larger than the number of phase
-    if !isempty(child_nodes)
-        push!(LT.phase_combinations, Set.(get_phase_ids.(child_nodes))...)
-    end
-    return child_nodes
-end
+# function expand!(LT::Lazytree, node::Node, x::AbstractVector, background::Bool, l::Real)
+#     starting_id = get_max_id(LT) + 1
+#     expand!(LT, node, x, background, l, starting_id)
+# end
+# 
+# 
+# function expand!(LT::Lazytree, node::Node, x::AbstractVector, background::Bool, l::Real, starting_id::Int)
+#     child_nodes = create_child_nodes(LT, node, x, background, l, starting_id)
+#     attach_child_nodes!(node, child_nodes)
+#     push!(LT.nodes, child_nodes...)
+#     # println(Set.(get_phase_ids.(child_nodes))...) # TODO: This fails when k is larger than the number of phase
+#     if !isempty(child_nodes)
+#         push!(LT.phase_combinations, Set.(get_phase_ids.(child_nodes))...)
+#     end
+#     return child_nodes
+# end
