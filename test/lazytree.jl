@@ -34,7 +34,7 @@ end
 cs = Vector{CrystalPhase}(undef, size(s))
 @. cs = CrystalPhase(String(s), (0.1, ), (Lorentz(), )) # For ease of testing fast
 
-x = LinRange(8, 45, 512)
+x = LinRange(8, 45, 512) |> collect
 y = cs[1].(x)+cs[2].(x)
 y /= max(y...)
 #collect(x)
@@ -90,5 +90,10 @@ ind = argmin(res)
 # plot!(x, evaluate!(zero(x), t[ind].phase_model, x))
 # display(plt)
 @test Set(get_phase_ids(t[ind])) == Set([0, 1])
+
+LT = Lazytree(cs, x)
+ts_stn = TreeSearchSettings{Float64}(3, [3, 2, 1],  false, false, 5., cs[1], opt_stn)
+@time t = search!(LT, x, y, ts_stn) 
+
 println("End of lazytree.jl test")
 end

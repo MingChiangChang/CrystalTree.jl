@@ -82,6 +82,8 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::Ab
     if ts_stn.amorphous
         bg = BackgroundModel(x, EQ(), 8., 10., rank_tol=1e-3)
         push!(LT.nodes, Node(bg))
+    elseif !isnothing(ts_stn.default_phase)
+        push!(LT.nodes, Node([ts_stn.default_phase], 0))
     else
         push!(LT.nodes, Node())
     end
