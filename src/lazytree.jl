@@ -138,7 +138,7 @@ function search!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer::Ab
                  optimize_mode::OptimizationMode = Simple, em_loop_num::Integer =8,
                  maxiter::Integer = 32, regularization::Bool = true, λ::Float64=1., verbose::Bool = false, tol::Real = DEFAULT_TOL)
     opt_stn = OptimizationSettings{eltype(mean)}(std_noise, mean, std, maxiter, regularization, method, objective, optimize_mode, em_loop_num, λ, verbose, tol)
-    ts_stn = TreeSearchSettings(depth, k, amorphous, background, background_length, opt_stn)
+    ts_stn = TreeSearchSettings(depth, k, amorphous, background, background_length, nothing, opt_stn)
     search!(LT, x, y, y_uncer, ts_stn)
 end
 
