@@ -169,12 +169,12 @@ function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, y_uncer
     result = Vector{Node}()
     search_k2n!(result, LT, LT.nodes[1], x, y, y_uncer, ts_stn)
     @threads for i in eachindex(result)
-        if !result[i].is_optimized
+        if isassigned(result, i) && !result[i].is_optimized
             optimize!(result[i].phase_model, x, y, y_uncer, ts_stn.opt_stn)
             result[i] = Node(result[i], pm, x, y, true)
         end
     end
-    result
+    result[[isassigned(result, i) for i in eachindex(result)]]
 end
 
 function search_k2n!(LT::Lazytree, x::AbstractVector, y::AbstractVector, ts_stn::TreeSearchSettings)
