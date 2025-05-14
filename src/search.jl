@@ -14,7 +14,6 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         deleting = Vector{Vector{Int64}}(undef, length(nodes))
 
         @threads for i in eachindex(nodes)
-
             phases = optimize!(nodes[i].phase_model, x, y, std_noise,
                               mean, std, method=LM, optimize_mode=Simple,
                               maxiter=maxiter,
@@ -28,7 +27,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
 
         delete_set = Set()
         for i in eachindex(deleting)
-            if isdefined(deleting, i)
+            if isassigned(deleting, i)
                 push!(delete_set, deleting[i]...)
             end
         end
@@ -36,7 +35,7 @@ function search!(t::Tree, traversal_func::Function, x::AbstractVector,
         counter += length(nodes)
         node_order = @view node_order[filter!(x->x ∉ delete_set, collect(1:size(node_order, 1)))]
     end
-    resulting_nodes
+    resulting_nodes[1:find_first_unassigned(resulting_nodes)-1]
 end
 
 
