@@ -13,8 +13,10 @@ function get_probabilities(results::AbstractVector{<:Node},
         std_θ::AbstractVector{<:Real};
         objective::AbstractObjective = LeastSquares(),
         renormalize::Bool = true,
-        normalization_constant::Real = 1.)
+        normalization_constant::Real = 1.,
+        n_sigma::Real = 1.)
     neg_log_prob = zeros(length(results))
+    std_noise = n_sigma * std_noise
 
     @threads for i in eachindex(results) # Phiddle not happy with using @threads here
         θ = get_free_params(results[i].phase_model)
@@ -41,13 +43,15 @@ function get_probabilities(results::AbstractVector{<:Node},
         std_θ::AbstractVector{<:Real};
         objective::AbstractObjective = LeastSquares(),
         renormalize::Bool = true,
-        normalization_constant::Real = 1.)
+        normalization_constant::Real = 1.,
+        n_sigma::Real = 1.)
 
     y_uncer = zero(y)
     get_probabilities(results, x, y, y_uncer, std_noise, mean_θ, std_θ,
                       objective=objective,
                       renormalize=renormalize,
-                      normalization_constant=normalization_constant)
+                      normalization_constant=normalization_constant,
+                      n_sigma=n_sigma)
 end
 
 
@@ -60,8 +64,10 @@ function get_probabilities(results::AbstractVector{<:Node},
         std_θ::AbstractVector{<:Real};
         objective::AbstractObjective = LeastSquares(),
         renormalize::Bool = true,
-        normalization_constant::Real = 1.)
-    std_noise = minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
+        normalization_constant::Real = 1.,
+        n_sigma::Real = 1.)
+
+    std_noise = n_sigma * minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
     get_probabilities(results, x, y, y_uncer, std_noise, mean_θ, std_θ,
                       objective=objective,
                       renormalize=renormalize,
@@ -75,9 +81,10 @@ function get_probabilities(results::AbstractVector{<:Node},
         std_θ::AbstractVector{<:Real};
         objective::AbstractObjective = LeastSquares(),
         renormalize::Bool = true,
-        normalization_constant::Real = 1.)
+        normalization_constant::Real = 1.,
+        n_sigma::Real = 1.)
     y_uncer = zero(y)
-    std_noise = minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
+    std_noise = n_sigma * minimum([std(y.- evaluate!(zero(x), results[i].phase_model, x)) for i in eachindex(results)])
     get_probabilities(results, x, y, y_uncer, std_noise, mean_θ, std_θ,
                       objective=objective,
                       renormalize=renormalize,
